@@ -1,0 +1,40 @@
+@startuml secuencia_venta_tiquetes
+title Diagrama de Secuencia — Proceso A: Venta de Tiquetes
+actor Cliente
+participant "InterfazVenta" as UI
+participant "ViajeProgramadoDAO" as ViajeDAO
+participant "TiqueteDAO" as TiqueteDAO
+participant "FacturaDAO" as FacturaDAO
+participant "SistemaPagos" as Pagos
+
+Cliente -> UI : solicitarCompra(idViaje)
+activate UI
+UI -> ViajeDAO : consultarDisponibilidad(idViaje)
+activate ViajeDAO
+ViajeDAO --> UI : sillasDisponibles
+deactivate ViajeDAO
+UI --> Cliente : mostrarSillas(sillasDisponibles)
+Cliente -> UI : seleccionarSilla(idSilla)
+UI -> TiqueteDAO : bloquearSillaTemporal(idSilla, idViaje)
+activate TiqueteDAO
+TiqueteDAO --> UI : sillaBloqueada
+deactivate TiqueteDAO
+UI -> FacturaDAO : generarFactura(idCliente, metodoPago)
+activate FacturaDAO
+FacturaDAO --> UI : facturaGenerada(cufe)
+deactivate FacturaDAO
+UI -> Pagos : procesarPago(monto)
+activate Pagos
+Pagos --> UI : confirmacionPago
+deactivate Pagos
+
+alt pago confirmado
+    UI -> TiqueteDAO : confirmarTiquete(idTiquete, "PAGADO")
+    TiqueteDAO --> UI : tiqueteConfirmado
+    UI --> Cliente : entregarTiquete(numeroTiquete)
+else pago no confirmado a tiempo
+    UI -> TiqueteDAO : marcarEstado(idTiquete, "RESERVADO")
+    UI --> Cliente : notificarReservaTemporal(fechaExpiracion)
+end
+deactivate UI
+@enduml

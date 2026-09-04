@@ -1,0 +1,42 @@
+@startuml secuencia_admision_mensajeria
+title Diagrama de Secuencia — Proceso C: Admisión y Consolidación de Mensajería
+actor "Cliente\n(Remitente)" as Remitente
+actor "Operario de Bodega" as Operario
+participant "InterfazAdmisionGuia" as UI
+participant "GuiaEnvioDAO" as GuiaDAO
+participant "RemesaDAO" as RemesaDAO
+participant "FacturaDAO" as FacturaDAO
+
+Remitente -> Operario : entregarPaquete(datos, destinatario)
+Operario -> UI : registrarAdmision(peso, dimensiones)
+activate UI
+UI -> UI : clasificarMercancia(categoria)
+UI -> GuiaDAO : calcularTarifa(peso, categoria)
+activate GuiaDAO
+GuiaDAO --> UI : tarifaCalculada
+UI -> GuiaDAO : generarGuia(codigoBarras, "ADMITIDO")
+GuiaDAO --> UI : guiaGenerada(idGuia)
+deactivate GuiaDAO
+
+opt paga en el momento
+    UI -> FacturaDAO : asociarFactura(idGuia)
+    activate FacturaDAO
+    FacturaDAO --> UI : facturaAsociada
+    deactivate FacturaDAO
+end
+
+UI -> RemesaDAO : buscarRemesaCompatible(remitente, destino)
+activate RemesaDAO
+RemesaDAO --> UI : remesaEncontrada / ninguna
+alt remesa compatible encontrada
+    UI -> GuiaDAO : consolidarEnRemesa(idGuia, idRemesa)
+    UI -> RemesaDAO : recalcularTotales(idRemesa)
+    RemesaDAO --> UI : totalesActualizados
+else sin remesa
+    UI -> UI : guiaViajaIndependiente()
+end
+deactivate RemesaDAO
+
+UI --> Operario : confirmarAdmision(numeroGuia)
+deactivate UI
+@enduml

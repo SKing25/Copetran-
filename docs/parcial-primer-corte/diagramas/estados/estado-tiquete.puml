@@ -1,0 +1,13 @@
+@startuml estado_tiquete
+title Diagrama de Estados — Clase Tiquete
+[*] --> RESERVADO : generar reserva temporal
+RESERVADO --> CANCELADO : expira fecha_expiracion_reserva\nsin pago
+RESERVADO --> PAGADO : pago confirmado
+PAGADO --> ABIERTO : cliente solicita tiquete\nabierto (+ penalidad)
+PAGADO --> VIAJADO : viaje completado
+PAGADO --> CANCELADO : cancelación
+ABIERTO --> PAGADO : reprogramación exitosa\n(Proceso G, antes de fecha límite)
+ABIERTO --> CANCELADO : vence fecha_limite_abierto\nsin reprogramar
+VIAJADO --> [*]
+CANCELADO --> [*]
+@enduml

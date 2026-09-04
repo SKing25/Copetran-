@@ -1,0 +1,10 @@
+@startuml estado_viaje_programado
+title Diagrama de Estados — Clase ViajeProgramado
+[*] --> PROGRAMADO : asignar bus y conductor\n(Proceso B, paso 2)
+PROGRAMADO --> EN_ALISTAMIENTO : inicia alistamiento\npreoperacional (pasos 3-6)
+EN_ALISTAMIENTO --> CANCELADO : novedad sin reemplazo\ndisponible (paso 7)
+EN_ALISTAMIENTO --> EN_CURSO : control de abordaje +\nplanilla única de viaje (pasos 8-9)
+EN_CURSO --> FINALIZADO : recorrido completado\n(tiquetes pasan a VIAJADO)
+FINALIZADO --> [*]
+CANCELADO --> [*]
+@enduml

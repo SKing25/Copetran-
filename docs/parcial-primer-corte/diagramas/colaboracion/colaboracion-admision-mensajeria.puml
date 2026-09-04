@@ -1,0 +1,23 @@
+@startuml colaboracion_admision_mensajeria
+title Diagrama de Colaboración — Proceso C: Admisión y Consolidación de Mensajería
+left to right direction
+
+object ":ClienteRemitente" as remitente
+object ":OperarioBodega" as operario
+object ":InterfazAdmisionGuia" as ui
+object ":GuiaEnvioDAO" as guiaDAO
+object ":RemesaDAO" as remesaDAO
+object ":FacturaDAO" as facturaDAO
+
+remitente --> operario : 1: entregarPaquete(datosRemitente, datosDestinatario)
+operario --> ui : 2: registrarAdmision(peso, dimensiones)
+ui --> ui : 3: clasificarMercancia(categoria)
+ui --> guiaDAO : 4: calcularTarifa(peso, categoria)
+guiaDAO --> ui : 5: tarifaCalculada
+ui --> guiaDAO : 6: generarGuia(codigoBarras, "ADMITIDO")
+ui --> facturaDAO : 7: asociarFactura(idGuia) [si paga de inmediato]
+ui --> remesaDAO : 8: buscarRemesaCompatible(remitente, destino)
+remesaDAO --> ui : 9: remesaEncontrada / ninguna
+ui --> guiaDAO : 10: consolidarEnRemesa(idGuia, idRemesa) [si aplica]
+ui --> operario : 11: confirmarAdmision(numeroGuia)
+@enduml

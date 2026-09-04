@@ -1,0 +1,24 @@
+@startuml colaboracion_venta_tiquetes
+title Diagrama de Colaboración — Proceso A: Venta de Tiquetes
+left to right direction
+
+object ":Cliente" as cliente
+object ":InterfazVenta" as ui
+object ":ViajeProgramadoDAO" as viajeDAO
+object ":TiqueteDAO" as tiqueteDAO
+object ":FacturaDAO" as facturaDAO
+object ":SistemaPagos" as pagos
+
+cliente --> ui : 1: solicitarCompra(idViaje)
+ui --> viajeDAO : 2: consultarDisponibilidad(idViaje)
+viajeDAO --> ui : 3: sillasDisponibles
+ui --> cliente : 4: mostrarSillas(sillasDisponibles)
+cliente --> ui : 5: seleccionarSilla(idSilla)
+ui --> tiqueteDAO : 6: bloquearSillaTemporal(idSilla, idViaje)
+ui --> facturaDAO : 7: generarFactura(idCliente, metodoPago)
+ui --> pagos : 8: procesarPago(monto)
+pagos --> ui : 9: confirmacionPago
+ui --> tiqueteDAO : 10: confirmarTiquete(idTiquete, "PAGADO")
+tiqueteDAO --> ui : 11: tiqueteConfirmado
+ui --> cliente : 12: entregarTiquete(numeroTiquete)
+@enduml

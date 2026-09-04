@@ -1,0 +1,13 @@
+@startuml estado_guia_envio
+title Diagrama de Estados — Clase GuiaEnvio
+[*] --> ADMITIDO : admisión en bodega/hub
+ADMITIDO --> EN_TRANSITO : despacho hacia destino
+EN_TRANSITO --> BODEGA_DESTINO : llegada a terminal destino
+BODEGA_DESTINO --> ENTREGADO : entrega al destinatario\n(firma + cédula)
+ADMITIDO --> NOVEDAD : retención por novedad
+EN_TRANSITO --> NOVEDAD : retención por novedad
+BODEGA_DESTINO --> NOVEDAD : retención por novedad
+NOVEDAD --> EN_TRANSITO : novedad resuelta,\ncontinúa tránsito
+NOVEDAD --> BODEGA_DESTINO : novedad resuelta\nen destino
+ENTREGADO --> [*]
+@enduml
