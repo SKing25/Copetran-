@@ -2,9 +2,10 @@
 title Diagrama de Clases DAO — Venta de Tiquetes y Mensajería (Copetran)
 skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
-top to bottom direction
+skinparam nodesep 20
+skinparam ranksep 40
 
-package "Capa DAO" {
+package "Capa de Acceso a Datos (DAO)" {
   interface GenericDAO<T> {
     +insertar(obj: T): boolean
     +consultarPorId(id: int): T
@@ -19,82 +20,48 @@ package "Capa DAO" {
     -ConexionBD()
     +obtenerInstancia(): ConexionBD
     +obtenerConexion(): Connection
-    +cerrarConexion(): void
   }
+
+  class ClienteDAO
+  class EmpleadoDAO
+  class ParametroDAO
+  class ViajeProgramadoDAO
+  class FacturaDAO
 
   class TiqueteDAO {
     +consultarDisponibilidadSilla(idViaje: int): List<int>
     +bloquearSillaTemporal(idSilla: int, idViaje: int): boolean
     +confirmarPago(idTiquete: int): boolean
   }
-  class FacturaDAO
-  class ViajeProgramadoDAO
-  class ClienteDAO
-  class EmpleadoDAO
-  class ParametroDAO
+
   class GuiaEnvioDAO {
     +consolidarEnRemesa(idGuia: int, idRemesa: int): boolean
     +actualizarEstado(idGuia: int, nuevoEstado: String): boolean
   }
+
   class RemesaDAO {
     +recalcularTotales(idRemesa: int): boolean
   }
 
-  GenericDAO <|.. TiqueteDAO
-  GenericDAO <|.. FacturaDAO
-  GenericDAO <|.. ViajeProgramadoDAO
-  GenericDAO <|.. ClienteDAO
-  GenericDAO <|.. EmpleadoDAO
-  GenericDAO <|.. ParametroDAO
-  GenericDAO <|.. GuiaEnvioDAO
-  GenericDAO <|.. RemesaDAO
+  ClienteDAO .up.|> GenericDAO
+  EmpleadoDAO .up.|> GenericDAO
+  ParametroDAO .up.|> GenericDAO
+  ViajeProgramadoDAO .up.|> GenericDAO
+  FacturaDAO .up.|> GenericDAO
+  TiqueteDAO .up.|> GenericDAO
+  GuiaEnvioDAO .up.|> GenericDAO
+  RemesaDAO .up.|> GenericDAO
 
-  TiqueteDAO ..> ConexionBD
-  FacturaDAO ..> ConexionBD
-  ViajeProgramadoDAO ..> ConexionBD
-  ClienteDAO ..> ConexionBD
-  EmpleadoDAO ..> ConexionBD
-  ParametroDAO ..> ConexionBD
-  GuiaEnvioDAO ..> ConexionBD
-  RemesaDAO ..> ConexionBD
+  note bottom of ConexionBD
+    Todas las clases *DAO obtienen su
+    conexión desde esta instancia única
+    (patrón Singleton, GoF).
+  end note
+
+  note "Cada clase <b>*DAO</b> gestiona la persistencia\nde la clase del <b>mismo nombre</b> en la Capa de\nEntidades (ver posición equivalente más abajo)." as N1
 }
 
-package "Capa de Entidades" {
-  class Tiquete {
-    -idTiquete: int
-    -numeroTiquete: String
-    -idViaje: int
-    -idSilla: int
-    -idPasajero: int
-    -idFactura: int
-    -idCanalVenta: int
-    -idEstadoTiquete: int
-    -valorPagado: BigDecimal
-    -fechaExpiracionReserva: DateTime
-    -penalidadReprogramacion: BigDecimal
-    +cambiarEstado(nuevoEstado: String): void
-  }
-
-  class Factura {
-    -idFactura: int
-    -idCliente: int
-    -idCajero: int
-    -idMetodoPago: int
-    -fechaEmision: DateTime
-    -montoTotal: BigDecimal
-    -cufe: String
-  }
-
-  class ViajeProgramado {
-    -idViaje: int
-    -idItinerario: int
-    -idBus: int
-    -idConductor: int
-    -fecha: Date
-    -horaSalida: Time
-    -estadoViaje: String
-  }
-
+package "Capa de Entidades (Modelo de Dominio)" {
   class Cliente {
     -idCliente: int
     -documento: String
@@ -116,6 +83,41 @@ package "Capa de Entidades" {
     -concepto: String
     -codigo: String
     -descripcion: String
+  }
+
+  class ViajeProgramado {
+    -idViaje: int
+    -idItinerario: int
+    -idBus: int
+    -idConductor: int
+    -fecha: Date
+    -horaSalida: Time
+    -estadoViaje: String
+  }
+
+  class Factura {
+    -idFactura: int
+    -idCliente: int
+    -idCajero: int
+    -idMetodoPago: int
+    -fechaEmision: DateTime
+    -montoTotal: BigDecimal
+    -cufe: String
+  }
+
+  class Tiquete {
+    -idTiquete: int
+    -numeroTiquete: String
+    -idViaje: int
+    -idSilla: int
+    -idPasajero: int
+    -idFactura: int
+    -idCanalVenta: int
+    -idEstadoTiquete: int
+    -valorPagado: BigDecimal
+    -fechaExpiracionReserva: DateTime
+    -penalidadReprogramacion: BigDecimal
+    +cambiarEstado(nuevoEstado: String): void
   }
 
   class GuiaEnvio {
@@ -143,29 +145,31 @@ package "Capa de Entidades" {
     +recalcularTotales(): void
   }
 
-  Tiquete "*" --> "1" ViajeProgramado
-  Tiquete "1" --> "1" Factura
+  Tiquete "*" -up-> "1" ViajeProgramado
+  Tiquete "1" -up-> "1" Factura
   Tiquete "*" --> "1" Cliente : id_pasajero
   Factura "*" --> "1" Cliente : id_cliente
   Factura "*" --> "1" Empleado : id_cajero
   GuiaEnvio "*" --> "0..1" Remesa
   GuiaEnvio "*" --> "1" Cliente : id_remitente
-  GuiaEnvio "*" --> "1" Cliente : id_destinatario
-  GuiaEnvio "*" --> "0..1" Factura
+  GuiaEnvio "*" -up-> "0..1" Factura
   Remesa "*" --> "1" Cliente : id_remitente
-  Remesa "*" --> "1" Cliente : id_destinatario
+
+  note bottom of Cliente
+    Cliente cumple el rol de remitente
+    o destinatario según el contexto
+    (mismos campos FK id_cliente en
+    REMESA y GUIA_ENVIO, RF09).
+  end note
 }
 
-note bottom of "Capa DAO"
-  Cada clase <b>XxxDAO</b> gestiona la entidad homónima
-  de la Capa de Entidades (TiqueteDAO → Tiquete,
-  FacturaDAO → Factura, ViajeProgramadoDAO → ViajeProgramado,
-  ClienteDAO → Cliente, EmpleadoDAO → Empleado,
-  ParametroDAO → Parametro, GuiaEnvioDAO → GuiaEnvio,
-  RemesaDAO → Remesa). La relación se identifica por
-  nombre y por la posición (mismo orden en ambos
-  paquetes); no se dibuja para evitar líneas cruzadas
-  entre las dos capas.
-end note
+ClienteDAO -[hidden]-> Cliente
+EmpleadoDAO -[hidden]-> Empleado
+ParametroDAO -[hidden]-> Parametro
+ViajeProgramadoDAO -[hidden]-> ViajeProgramado
+FacturaDAO -[hidden]-> Factura
+TiqueteDAO -[hidden]-> Tiquete
+GuiaEnvioDAO -[hidden]-> GuiaEnvio
+RemesaDAO -[hidden]-> Remesa
 
 @enduml
