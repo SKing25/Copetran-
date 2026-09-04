@@ -40,6 +40,11 @@ Docente: José Marcial Téllez Gómez
   - [Proceso A — Venta de tiquetes](docs/parcial-primer-corte/diagramas/secuencia/secuencia-venta-tiquetes.puml)
   - [Proceso C — Admisión y consolidación de mensajería](docs/parcial-primer-corte/diagramas/secuencia/secuencia-admision-mensajeria.puml)
 
+**Fuentes de trazabilidad** (`docs/parcial-primer-corte/fuentes/`):
+
+- [Script SQL corregido (schema real, T-SQL)](docs/parcial-primer-corte/fuentes/copetran_corregido.sql)
+- [Organigrama definitivo de Copetran (transcripción)](docs/parcial-primer-corte/fuentes/organigrama-copetran.md)
+
 ### CR-1 T-2 — Formulación de Proyecto
 
 Documento fuente de verdad del caso Copetran (organigrama, procesos, requerimientos, modelo relacional
