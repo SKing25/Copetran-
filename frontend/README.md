@@ -9,13 +9,31 @@ contenido de negocio (roles, campos, estados) sale de
 
 ## Cómo correrlo
 
+Requisitos: [Node.js](https://nodejs.org) 18+ (con `npm`).
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Abre `http://localhost:5173`.
+Abre `http://localhost:5173`. Para detenerlo: `Ctrl+C` en la misma terminal.
+
+### Problema común en Windows: "la ejecución de scripts está deshabilitada"
+
+Si `npm run dev` falla en PowerShell con un error de `PSSecurityException` / política de ejecución,
+es porque PowerShell bloquea por defecto los scripts `.ps1` (incluido el wrapper de `npm`). Dos
+soluciones:
+
+- **Rápida, sin tocar configuración:** usa `npm.cmd run dev` en vez de `npm run dev`.
+- **Permanente (recomendada):** habilita scripts locales solo para tu usuario (no requiere admin):
+  ```powershell
+  Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+  ```
+  Después de esto, `npm run dev` funciona normal en cualquier terminal nueva.
+
+Si acabas de instalar Node.js y `npm`/`node` no se reconocen, cierra y abre una terminal nueva (o
+reinicia VSCode) para que tome el PATH actualizado.
 
 ## Estructura
 
