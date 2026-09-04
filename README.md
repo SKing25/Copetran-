@@ -28,22 +28,29 @@ Docente: José Marcial Téllez Gómez
 
 **Diagramas** (`docs/parcial-primer-corte/diagramas/`):
 
-- [Diagrama de clases DAO](docs/parcial-primer-corte/diagramas/clases-dao/clases-dao.puml)
+- [Diagrama de clases DAO](docs/parcial-primer-corte/diagramas/clases-dao/clases-dao.puml) ([PNG](docs/parcial-primer-corte/diagramas/clases-dao/clases_dao.png))
 - Diagramas de estados:
-  - [Tiquete](docs/parcial-primer-corte/diagramas/estados/estado-tiquete.puml)
-  - [Guía de envío](docs/parcial-primer-corte/diagramas/estados/estado-guia-envio.puml)
-  - [Viaje programado](docs/parcial-primer-corte/diagramas/estados/estado-viaje-programado.puml)
+  - [Tiquete](docs/parcial-primer-corte/diagramas/estados/estado-tiquete.puml) ([PNG](docs/parcial-primer-corte/diagramas/estados/estado_tiquete.png))
+  - [Guía de envío](docs/parcial-primer-corte/diagramas/estados/estado-guia-envio.puml) ([PNG](docs/parcial-primer-corte/diagramas/estados/estado_guia_envio.png))
+  - [Viaje programado](docs/parcial-primer-corte/diagramas/estados/estado-viaje-programado.puml) ([PNG](docs/parcial-primer-corte/diagramas/estados/estado_viaje_programado.png))
 - Diagramas de colaboración:
-  - [Proceso A — Venta de tiquetes](docs/parcial-primer-corte/diagramas/colaboracion/colaboracion-venta-tiquetes.puml)
-  - [Proceso C — Admisión y consolidación de mensajería](docs/parcial-primer-corte/diagramas/colaboracion/colaboracion-admision-mensajeria.puml)
+  - [Proceso A — Venta de tiquetes](docs/parcial-primer-corte/diagramas/colaboracion/colaboracion-venta-tiquetes.puml) ([PNG](docs/parcial-primer-corte/diagramas/colaboracion/colaboracion_venta_tiquetes.png))
+  - [Proceso C — Admisión y consolidación de mensajería](docs/parcial-primer-corte/diagramas/colaboracion/colaboracion-admision-mensajeria.puml) ([PNG](docs/parcial-primer-corte/diagramas/colaboracion/colaboracion_admision_mensajeria.png))
 - Diagramas de secuencia:
-  - [Proceso A — Venta de tiquetes](docs/parcial-primer-corte/diagramas/secuencia/secuencia-venta-tiquetes.puml)
-  - [Proceso C — Admisión y consolidación de mensajería](docs/parcial-primer-corte/diagramas/secuencia/secuencia-admision-mensajeria.puml)
+  - [Proceso A — Venta de tiquetes](docs/parcial-primer-corte/diagramas/secuencia/secuencia-venta-tiquetes.puml) ([PNG](docs/parcial-primer-corte/diagramas/secuencia/secuencia_venta_tiquetes.png))
+  - [Proceso C — Admisión y consolidación de mensajería](docs/parcial-primer-corte/diagramas/secuencia/secuencia-admision-mensajeria.puml) ([PNG](docs/parcial-primer-corte/diagramas/secuencia/secuencia_admision_mensajeria.png))
 
 **Fuentes de trazabilidad** (`docs/parcial-primer-corte/fuentes/`):
 
 - [Script SQL corregido (schema real, T-SQL)](docs/parcial-primer-corte/fuentes/copetran_corregido.sql)
 - [Organigrama definitivo de Copetran (transcripción)](docs/parcial-primer-corte/fuentes/organigrama-copetran.md)
+
+### Interfaz funcional (scaffold)
+
+[`frontend/`](frontend/) — React + TypeScript + Vite + TailwindCSS, con login por rol (Cliente, Cajero de
+Agencia, Operario de Bodega) y dashboards que implementan ECU-01 (Comprar/Vender Tiquete) y ECU-02
+(Admitir y Consolidar Guía de Envío) sobre datos mock en memoria. Ver [`frontend/README.md`](frontend/README.md)
+para cómo correrlo.
 
 ### CR-1 T-2 — Formulación de Proyecto
 
