@@ -1,12 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useData } from '../context/DataContext';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import type { CanalVenta, Cliente, MetodoPago, Tiquete } from '../types/copetran';
-import { Card, CardTitle } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
-import { cn } from '../utils/cn';
-import { formatCurrency, formatDate } from '../utils/format';
+import { useAuth } from '@/context/AuthContext';
+import { useData } from '@/context/DataContext';
+import { useLocalStorage } from '@/hooks';
+import type { CanalVenta, Cliente, MetodoPago, Tiquete } from '@/types/copetran';
+import { AlertDialog, Badge, Button, Card, CardTitle, Input, Select } from '@/components/ui';
+import { cn } from '@/utils/cn';
+import { formatCurrency, formatDate } from '@/utils/format';
 
 /**
  * ECU-01 — Comprar Tiquete de Pasajero (Proceso A), canal Cliente (WEB/APP).
@@ -27,6 +26,8 @@ export function ClienteDashboard() {
   const [tipoTiquete, setTipoTiquete] = useState<'PAGADO' | 'RESERVADO' | 'ABIERTO'>('PAGADO');
   const [ultimoTiquete, setUltimoTiquete] = useState<Tiquete | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [comprando, setComprando] = useState(false);
+  const [tiquetePorConfirmar, setTiquetePorConfirmar] = useState<Tiquete | null>(null);
 
   const sillas = useMemo(() => (idViaje ? sillasDisponibles(idViaje) : []), [idViaje, sillasDisponibles]);
   const misTiquetes = useMemo(
@@ -38,10 +39,12 @@ export function ClienteDashboard() {
     return <RegistroCliente nombreSugerido={usuario?.nombre ?? ''} onRegistrado={setClienteActual} registrarCliente={registrarCliente} />;
   }
 
-  function confirmarCompra() {
+  async function confirmarCompra() {
     if (!clienteActual || !idViaje || !idSilla) return;
     setError(null);
+    setComprando(true);
     try {
+      await new Promise((resolve) => setTimeout(resolve, 400));
       const tiquete = venderTiquete({
         idViaje,
         idSilla,
@@ -56,6 +59,8 @@ export function ClienteDashboard() {
       setIdSilla(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No fue posible completar la compra.');
+    } finally {
+      setComprando(false);
     }
   }
 
@@ -132,52 +137,36 @@ export function ClienteDashboard() {
         <Card>
           <CardTitle>3. Canal, pago y tipo de tiquete</CardTitle>
           <div className="mt-3 grid gap-4 sm:grid-cols-3">
-            <div>
-              <label className="block text-xs font-medium text-slate-600">Canal de venta</label>
-              <select
-                value={canal}
-                onChange={(e) => setCanal(e.target.value as CanalVenta)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-              >
-                <option value="WEB">WEB</option>
-                <option value="APP">APP</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-600">Método de pago</label>
-              <select
-                value={metodoPago}
-                onChange={(e) => setMetodoPago(e.target.value as MetodoPago)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                disabled={tipoTiquete === 'RESERVADO'}
-              >
-                <option value="TARJETA_CREDITO">Tarjeta de crédito</option>
-                <option value="TARJETA_DEBITO">Tarjeta débito</option>
-                <option value="TRANSFERENCIA">Transferencia / QR</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-600">Tipo de tiquete</label>
-              <select
-                value={tipoTiquete}
-                onChange={(e) => setTipoTiquete(e.target.value as typeof tipoTiquete)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-              >
-                <option value="PAGADO">Pago inmediato</option>
-                <option value="RESERVADO">Reserva sin pago (A1)</option>
-                <option value="ABIERTO">Tiquete abierto (A2)</option>
-              </select>
-            </div>
+            <Select label="Canal de venta" value={canal} onChange={(e) => setCanal(e.target.value as CanalVenta)}>
+              <option value="WEB">WEB</option>
+              <option value="APP">APP</option>
+            </Select>
+            <Select
+              label="Método de pago"
+              value={metodoPago}
+              onChange={(e) => setMetodoPago(e.target.value as MetodoPago)}
+              disabled={tipoTiquete === 'RESERVADO'}
+            >
+              <option value="TARJETA_CREDITO">Tarjeta de crédito</option>
+              <option value="TARJETA_DEBITO">Tarjeta débito</option>
+              <option value="TRANSFERENCIA">Transferencia / QR</option>
+            </Select>
+            <Select
+              label="Tipo de tiquete"
+              value={tipoTiquete}
+              onChange={(e) => setTipoTiquete(e.target.value as typeof tipoTiquete)}
+            >
+              <option value="PAGADO">Pago inmediato</option>
+              <option value="RESERVADO">Reserva sin pago (A1)</option>
+              <option value="ABIERTO">Tiquete abierto (A2)</option>
+            </Select>
           </div>
 
           {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}
 
-          <button
-            onClick={confirmarCompra}
-            className="mt-4 rounded-lg bg-copetran-600 px-4 py-2 text-sm font-semibold text-white hover:bg-copetran-700"
-          >
+          <Button onClick={confirmarCompra} loading={comprando} className="mt-4">
             Confirmar compra
-          </button>
+          </Button>
         </Card>
       )}
 
@@ -201,12 +190,9 @@ export function ClienteDashboard() {
                   <div className="flex items-center gap-2">
                     <Badge estado={t.id_estado_tiquete} />
                     {t.id_estado_tiquete === 'RESERVADO' && (
-                      <button
-                        onClick={() => cambiarEstadoTiquete(t.id_tiquete, 'PAGADO')}
-                        className="rounded-md border border-slate-300 px-2 py-1 text-xs hover:bg-slate-100"
-                      >
+                      <Button variant="secondary" size="sm" onClick={() => setTiquetePorConfirmar(t)}>
                         Confirmar pago
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </li>
@@ -215,6 +201,22 @@ export function ClienteDashboard() {
           </ul>
         )}
       </Card>
+
+      <AlertDialog
+        open={tiquetePorConfirmar !== null}
+        onClose={() => setTiquetePorConfirmar(null)}
+        onConfirm={() => {
+          if (tiquetePorConfirmar) cambiarEstadoTiquete(tiquetePorConfirmar.id_tiquete, 'PAGADO');
+          setTiquetePorConfirmar(null);
+        }}
+        title="Confirmar pago"
+        description={
+          tiquetePorConfirmar
+            ? `¿Confirmar el pago del tiquete ${tiquetePorConfirmar.numero_tiquete}? Pasará de RESERVADO a PAGADO.`
+            : undefined
+        }
+        confirmLabel="Sí, confirmar pago"
+      />
     </div>
   );
 }
@@ -247,36 +249,13 @@ function RegistroCliente({
         compras posteriores se reutiliza el mismo registro.
       </p>
       <form onSubmit={handleSubmit} className="mt-4 space-y-3">
-        <input
-          placeholder="Documento"
-          value={documento}
-          onChange={(e) => setDocumento(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          required
-        />
-        <input
-          placeholder="Nombres"
-          value={nombres}
-          onChange={(e) => setNombres(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          required
-        />
-        <input
-          placeholder="Apellidos"
-          value={apellidos}
-          onChange={(e) => setApellidos(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          required
-        />
-        <input
-          placeholder="Celular"
-          value={celular}
-          onChange={(e) => setCelular(e.target.value)}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-        />
-        <button type="submit" className="w-full rounded-lg bg-copetran-600 px-4 py-2 text-sm font-semibold text-white hover:bg-copetran-700">
+        <Input placeholder="Documento" value={documento} onChange={(e) => setDocumento(e.target.value)} required />
+        <Input placeholder="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} required />
+        <Input placeholder="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
+        <Input placeholder="Celular" value={celular} onChange={(e) => setCelular(e.target.value)} />
+        <Button type="submit" fullWidth>
           Continuar
-        </button>
+        </Button>
       </form>
     </Card>
   );

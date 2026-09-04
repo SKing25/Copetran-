@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { useData } from '../context/DataContext';
-import type { CategoriaMercancia, EstadoGuia, MetodoPago } from '../types/copetran';
-import { Card, CardTitle } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
-import { formatCurrency, formatDate } from '../utils/format';
+import { useData } from '@/context/DataContext';
+import type { CategoriaMercancia, EstadoGuia, MetodoPago } from '@/types/copetran';
+import { AlertDialog, Badge, Button, Card, CardTitle, Input, Select } from '@/components/ui';
+import { formatCurrency, formatDate } from '@/utils/format';
 
 const ID_OPERARIO_DEMO = 200;
 
@@ -22,6 +21,12 @@ const SIGUIENTES_ESTADOS: Record<EstadoGuia, EstadoGuia[]> = {
   ENTREGADO: [],
 };
 
+interface CambioEstadoPendiente {
+  idGuia: number;
+  codigoBarras: string;
+  nuevoEstado: EstadoGuia;
+}
+
 /**
  * ECU-02 — Admitir y Consolidar Guía de Envío (Proceso C).
  * Ver docs/parcial-primer-corte/05-especificacion-casos-de-uso.md.
@@ -37,23 +42,31 @@ export function OperarioDashboard() {
   const [metodoPago, setMetodoPago] = useState<MetodoPago>('EFECTIVO');
   const [mostrarRegistro, setMostrarRegistro] = useState<'remitente' | 'destinatario' | null>(null);
   const [ultimoIdGuia, setUltimoIdGuia] = useState<number | null>(null);
+  const [admitiendo, setAdmitiendo] = useState(false);
+  const [cambioPendiente, setCambioPendiente] = useState<CambioEstadoPendiente | null>(null);
 
   const guiasOrdenadas = useMemo(() => [...guias].sort((a, b) => b.id_guia - a.id_guia), [guias]);
 
-  function handleAdmitir(e: React.FormEvent) {
+  async function handleAdmitir(e: React.FormEvent) {
     e.preventDefault();
     if (!idRemitente || !idDestinatario || !pesoKg) return;
-    const guia = admitirGuia({
-      idRemitente,
-      idDestinatario,
-      categoria,
-      pesoKg: Number(pesoKg),
-      idCajero: ID_OPERARIO_DEMO,
-      idMetodoPago: metodoPago,
-      pagaInmediato,
-    });
-    setUltimoIdGuia(guia.id_guia);
-    setPesoKg('');
+    setAdmitiendo(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const guia = admitirGuia({
+        idRemitente,
+        idDestinatario,
+        categoria,
+        pesoKg: Number(pesoKg),
+        idCajero: ID_OPERARIO_DEMO,
+        idMetodoPago: metodoPago,
+        pagaInmediato,
+      });
+      setUltimoIdGuia(guia.id_guia);
+      setPesoKg('');
+    } finally {
+      setAdmitiendo(false);
+    }
   }
 
   function remesasCompatibles(idGuiaBuscada: number) {
@@ -99,55 +112,45 @@ export function OperarioDashboard() {
           )}
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <div>
-              <label className="block text-xs font-medium text-slate-600">Categoría de mercancía</label>
-              <select
-                value={categoria}
-                onChange={(e) => setCategoria(e.target.value as CategoriaMercancia)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-              >
-                {CATEGORIAS.map((c) => (
-                  <option key={c.valor} value={c.valor}>
-                    {c.etiqueta}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-600">Peso (kg)</label>
-              <input
-                type="number"
-                min="0.1"
-                step="0.1"
-                value={pesoKg}
-                onChange={(e) => setPesoKg(e.target.value)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                required
-              />
-            </div>
+            <Select
+              label="Categoría de mercancía"
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value as CategoriaMercancia)}
+            >
+              {CATEGORIAS.map((c) => (
+                <option key={c.valor} value={c.valor}>
+                  {c.etiqueta}
+                </option>
+              ))}
+            </Select>
+            <Input
+              label="Peso (kg)"
+              type="number"
+              min="0.1"
+              step="0.1"
+              value={pesoKg}
+              onChange={(e) => setPesoKg(e.target.value)}
+              required
+            />
             <div className="flex flex-col justify-end">
               <label className="flex items-center gap-2 text-xs font-medium text-slate-600">
                 <input type="checkbox" checked={pagaInmediato} onChange={(e) => setPagaInmediato(e.target.checked)} />
                 Paga en el momento (A1)
               </label>
               {pagaInmediato && (
-                <select
-                  value={metodoPago}
-                  onChange={(e) => setMetodoPago(e.target.value as MetodoPago)}
-                  className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-                >
+                <Select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value as MetodoPago)} className="mt-1">
                   <option value="EFECTIVO">Efectivo</option>
                   <option value="TARJETA_CREDITO">Tarjeta de crédito</option>
                   <option value="TARJETA_DEBITO">Tarjeta débito</option>
                   <option value="TRANSFERENCIA">Transferencia / QR</option>
-                </select>
+                </Select>
               )}
             </div>
           </div>
 
-          <button type="submit" className="rounded-lg bg-copetran-600 px-4 py-2 text-sm font-semibold text-white hover:bg-copetran-700">
+          <Button type="submit" loading={admitiendo}>
             Generar guía
-          </button>
+          </Button>
         </form>
       </Card>
 
@@ -193,13 +196,14 @@ export function OperarioDashboard() {
                     <td className="py-2">
                       <div className="flex flex-wrap gap-1">
                         {siguientes.map((estado) => (
-                          <button
+                          <Button
                             key={estado}
-                            onClick={() => cambiarEstadoGuia(g.id_guia, estado)}
-                            className="rounded-md border border-slate-300 px-2 py-1 text-xs hover:bg-slate-100"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setCambioPendiente({ idGuia: g.id_guia, codigoBarras: g.codigo_barras, nuevoEstado: estado })}
                           >
                             → {estado}
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </td>
@@ -229,6 +233,23 @@ export function OperarioDashboard() {
           </ul>
         )}
       </Card>
+
+      <AlertDialog
+        open={cambioPendiente !== null}
+        onClose={() => setCambioPendiente(null)}
+        onConfirm={() => {
+          if (cambioPendiente) cambiarEstadoGuia(cambioPendiente.idGuia, cambioPendiente.nuevoEstado);
+          setCambioPendiente(null);
+        }}
+        title="Cambiar estado de la guía"
+        description={
+          cambioPendiente
+            ? `¿Cambiar la guía ${cambioPendiente.codigoBarras} a estado ${cambioPendiente.nuevoEstado}?`
+            : undefined
+        }
+        confirmLabel="Sí, cambiar estado"
+        variant={cambioPendiente?.nuevoEstado === 'NOVEDAD' ? 'danger' : 'primary'}
+      />
     </div>
   );
 }
@@ -250,25 +271,17 @@ function SelectorCliente({
     <div>
       <label className="block text-xs font-medium text-slate-600">{etiqueta}</label>
       <div className="mt-1 flex gap-2">
-        <select
-          value={valor}
-          onChange={(e) => onChange(e.target.value ? Number(e.target.value) : '')}
-          className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-        >
+        <Select value={valor} onChange={(e) => onChange(e.target.value ? Number(e.target.value) : '')}>
           <option value="">Selecciona…</option>
           {clientes.map((c) => (
             <option key={c.id_cliente} value={c.id_cliente}>
               {c.nombres} {c.apellidos} — {c.documento}
             </option>
           ))}
-        </select>
-        <button
-          type="button"
-          onClick={onRegistrarNuevo}
-          className="whitespace-nowrap rounded-md border border-slate-300 px-2 py-1.5 text-xs hover:bg-slate-100"
-        >
+        </Select>
+        <Button type="button" variant="secondary" size="sm" onClick={onRegistrarNuevo} className="whitespace-nowrap">
           Nuevo
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -291,20 +304,20 @@ function RegistroRapido({
     <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
       <p className="text-xs font-medium text-slate-600">Registrar cliente (Proceso M)</p>
       <div className="mt-2 grid gap-2 sm:grid-cols-4">
-        <input placeholder="Documento" value={documento} onChange={(e) => setDocumento(e.target.value)} className="rounded-md border border-slate-300 px-2 py-1.5 text-sm" />
-        <input placeholder="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} className="rounded-md border border-slate-300 px-2 py-1.5 text-sm" />
-        <input placeholder="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} className="rounded-md border border-slate-300 px-2 py-1.5 text-sm" />
+        <Input placeholder="Documento" value={documento} onChange={(e) => setDocumento(e.target.value)} />
+        <Input placeholder="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} />
+        <Input placeholder="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} />
         <div className="flex gap-2">
-          <button
+          <Button
             type="button"
+            size="sm"
             onClick={() => documento && nombres && apellidos && onRegistrado(registrarCliente({ documento, nombres, apellidos }))}
-            className="rounded-md bg-copetran-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-copetran-700"
           >
             Guardar
-          </button>
-          <button type="button" onClick={onCancelar} className="rounded-md border border-slate-300 px-3 py-1.5 text-xs hover:bg-slate-100">
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={onCancelar}>
             Cancelar
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -326,19 +339,15 @@ function ConsolidacionRemesa({
         <>
           <span className="text-xs text-slate-500">Remesas compatibles (mismo remitente/destino):</span>
           {candidatas.map((r) => (
-            <button
-              key={r.id_remesa}
-              onClick={() => onConsolidar(idGuia, r.id_remesa)}
-              className="rounded-md border border-slate-300 px-2 py-1 text-xs hover:bg-slate-100"
-            >
+            <Button key={r.id_remesa} variant="secondary" size="sm" onClick={() => onConsolidar(idGuia, r.id_remesa)}>
               Añadir a {r.numero_remesa}
-            </button>
+            </Button>
           ))}
         </>
       )}
-      <button onClick={() => onConsolidar(idGuia)} className="rounded-md border border-copetran-500 px-2 py-1 text-xs text-copetran-700 hover:bg-copetran-50">
+      <Button variant="outline" size="sm" onClick={() => onConsolidar(idGuia)}>
         Crear remesa nueva
-      </button>
+      </Button>
       <span className="text-xs text-slate-400">(o dejar la guía sin remesa — envío independiente, A2)</span>
     </div>
   );

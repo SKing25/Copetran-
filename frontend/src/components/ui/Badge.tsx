@@ -1,4 +1,6 @@
-import { cn } from '../../utils/cn';
+import { forwardRef } from 'react';
+import type { HTMLAttributes } from 'react';
+import { cn } from '@/utils/cn';
 
 const COLOR_POR_ESTADO: Record<string, string> = {
   // ESTADO_TIQUETE
@@ -15,16 +17,21 @@ const COLOR_POR_ESTADO: Record<string, string> = {
   NOVEDAD: 'bg-rose-100 text-rose-800',
 };
 
-export function Badge({ estado, className }: { estado: string; className?: string }) {
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-        COLOR_POR_ESTADO[estado] ?? 'bg-slate-100 text-slate-700',
-        className,
-      )}
-    >
-      {estado}
-    </span>
-  );
+interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
+  estado: string;
 }
+
+export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(({ estado, className, ...props }, ref) => (
+  <span
+    ref={ref}
+    className={cn(
+      'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+      COLOR_POR_ESTADO[estado] ?? 'bg-slate-100 text-slate-700',
+      className,
+    )}
+    {...props}
+  >
+    {estado}
+  </span>
+));
+Badge.displayName = 'Badge';

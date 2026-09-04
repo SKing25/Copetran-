@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react';
-import { useData } from '../context/DataContext';
-import type { MetodoPago, Tiquete } from '../types/copetran';
-import { Card, CardTitle } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
-import { cn } from '../utils/cn';
-import { formatCurrency, formatDate } from '../utils/format';
+import { useData } from '@/context/DataContext';
+import type { MetodoPago, Tiquete } from '@/types/copetran';
+import { AlertDialog, Badge, Button, Card, CardTitle, Input, Select } from '@/components/ui';
+import { cn } from '@/utils/cn';
+import { formatCurrency, formatDate } from '@/utils/format';
 
 const ID_CAJERO_DEMO = 100;
 
@@ -23,17 +22,18 @@ export function CajeroDashboard() {
   const [tipoTiquete, setTipoTiquete] = useState<'PAGADO' | 'RESERVADO' | 'ABIERTO'>('PAGADO');
   const [error, setError] = useState<string | null>(null);
   const [mostrarRegistro, setMostrarRegistro] = useState(false);
+  const [vendiendo, setVendiendo] = useState(false);
+  const [tiquetePorConfirmar, setTiquetePorConfirmar] = useState<Tiquete | null>(null);
 
   const sillas = useMemo(() => (idViaje ? sillasDisponibles(idViaje) : []), [idViaje, sillasDisponibles]);
-  const ventas = useMemo(
-    () => [...tiquetes].sort((a, b) => b.id_tiquete - a.id_tiquete),
-    [tiquetes],
-  );
+  const ventas = useMemo(() => [...tiquetes].sort((a, b) => b.id_tiquete - a.id_tiquete), [tiquetes]);
 
-  function confirmarVenta() {
+  async function confirmarVenta() {
     if (!idCliente || !idViaje || !idSilla) return;
     setError(null);
+    setVendiendo(true);
     try {
+      await new Promise((resolve) => setTimeout(resolve, 400));
       venderTiquete({
         idViaje,
         idSilla,
@@ -47,6 +47,8 @@ export function CajeroDashboard() {
       setIdSilla(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No fue posible completar la venta.');
+    } finally {
+      setVendiendo(false);
     }
   }
 
@@ -59,11 +61,10 @@ export function CajeroDashboard() {
         {!mostrarRegistro ? (
           <div className="mt-3 flex items-end gap-3">
             <div className="flex-1">
-              <label className="block text-xs font-medium text-slate-600">Cliente registrado</label>
-              <select
+              <Select
+                label="Cliente registrado"
                 value={idCliente}
                 onChange={(e) => setIdCliente(e.target.value ? Number(e.target.value) : '')}
-                className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
               >
                 <option value="">Selecciona un cliente…</option>
                 {clientes.map((c) => (
@@ -71,14 +72,11 @@ export function CajeroDashboard() {
                     {c.nombres} {c.apellidos} — {c.documento}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
-            <button
-              onClick={() => setMostrarRegistro(true)}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium hover:bg-slate-100"
-            >
+            <Button variant="secondary" size="sm" onClick={() => setMostrarRegistro(true)}>
               Registrar cliente nuevo
-            </button>
+            </Button>
           </div>
         ) : (
           <RegistroRapidoCliente
@@ -142,39 +140,26 @@ export function CajeroDashboard() {
         <Card>
           <CardTitle>3. Pago</CardTitle>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-medium text-slate-600">Método de pago</label>
-              <select
-                value={metodoPago}
-                onChange={(e) => setMetodoPago(e.target.value as MetodoPago)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-              >
-                <option value="EFECTIVO">Efectivo</option>
-                <option value="TARJETA_CREDITO">Tarjeta de crédito</option>
-                <option value="TARJETA_DEBITO">Tarjeta débito</option>
-                <option value="TRANSFERENCIA">Transferencia / QR</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-600">Tipo de tiquete</label>
-              <select
-                value={tipoTiquete}
-                onChange={(e) => setTipoTiquete(e.target.value as typeof tipoTiquete)}
-                className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-              >
-                <option value="PAGADO">Pago inmediato</option>
-                <option value="RESERVADO">Reserva sin pago (A1)</option>
-                <option value="ABIERTO">Tiquete abierto (A2)</option>
-              </select>
-            </div>
+            <Select label="Método de pago" value={metodoPago} onChange={(e) => setMetodoPago(e.target.value as MetodoPago)}>
+              <option value="EFECTIVO">Efectivo</option>
+              <option value="TARJETA_CREDITO">Tarjeta de crédito</option>
+              <option value="TARJETA_DEBITO">Tarjeta débito</option>
+              <option value="TRANSFERENCIA">Transferencia / QR</option>
+            </Select>
+            <Select
+              label="Tipo de tiquete"
+              value={tipoTiquete}
+              onChange={(e) => setTipoTiquete(e.target.value as typeof tipoTiquete)}
+            >
+              <option value="PAGADO">Pago inmediato</option>
+              <option value="RESERVADO">Reserva sin pago (A1)</option>
+              <option value="ABIERTO">Tiquete abierto (A2)</option>
+            </Select>
           </div>
           {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}
-          <button
-            onClick={confirmarVenta}
-            className="mt-4 rounded-lg bg-copetran-600 px-4 py-2 text-sm font-semibold text-white hover:bg-copetran-700"
-          >
+          <Button onClick={confirmarVenta} loading={vendiendo} className="mt-4">
             Confirmar venta
-          </button>
+          </Button>
         </Card>
       )}
 
@@ -206,12 +191,9 @@ export function CajeroDashboard() {
                     </td>
                     <td className="py-2">
                       {t.id_estado_tiquete === 'RESERVADO' && (
-                        <button
-                          onClick={() => cambiarEstadoTiquete(t.id_tiquete, 'PAGADO')}
-                          className="rounded-md border border-slate-300 px-2 py-1 text-xs hover:bg-slate-100"
-                        >
+                        <Button variant="secondary" size="sm" onClick={() => setTiquetePorConfirmar(t)}>
                           Confirmar pago
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>
@@ -221,6 +203,22 @@ export function CajeroDashboard() {
           </table>
         </div>
       </Card>
+
+      <AlertDialog
+        open={tiquetePorConfirmar !== null}
+        onClose={() => setTiquetePorConfirmar(null)}
+        onConfirm={() => {
+          if (tiquetePorConfirmar) cambiarEstadoTiquete(tiquetePorConfirmar.id_tiquete, 'PAGADO');
+          setTiquetePorConfirmar(null);
+        }}
+        title="Confirmar pago"
+        description={
+          tiquetePorConfirmar
+            ? `¿Confirmar el pago del tiquete ${tiquetePorConfirmar.numero_tiquete}? Pasará de RESERVADO a PAGADO.`
+            : undefined
+        }
+        confirmLabel="Sí, confirmar pago"
+      />
     </div>
   );
 }
@@ -247,16 +245,16 @@ function RegistroRapidoCliente({
       }}
       className="mt-3 grid gap-2 sm:grid-cols-4"
     >
-      <input placeholder="Documento" value={documento} onChange={(e) => setDocumento(e.target.value)} className="rounded-md border border-slate-300 px-2 py-1.5 text-sm" required />
-      <input placeholder="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} className="rounded-md border border-slate-300 px-2 py-1.5 text-sm" required />
-      <input placeholder="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} className="rounded-md border border-slate-300 px-2 py-1.5 text-sm" required />
+      <Input placeholder="Documento" value={documento} onChange={(e) => setDocumento(e.target.value)} required />
+      <Input placeholder="Nombres" value={nombres} onChange={(e) => setNombres(e.target.value)} required />
+      <Input placeholder="Apellidos" value={apellidos} onChange={(e) => setApellidos(e.target.value)} required />
       <div className="flex gap-2">
-        <button type="submit" className="rounded-md bg-copetran-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-copetran-700">
+        <Button type="submit" size="sm">
           Guardar
-        </button>
-        <button type="button" onClick={onCancelar} className="rounded-md border border-slate-300 px-3 py-1.5 text-xs hover:bg-slate-100">
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={onCancelar}>
           Cancelar
-        </button>
+        </Button>
       </div>
     </form>
   );

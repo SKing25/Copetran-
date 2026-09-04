@@ -1,20 +1,11 @@
-type ClassValue = string | number | null | undefined | false | Record<string, boolean>;
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 /**
- * Utilidad genérica para combinar clases condicionales de Tailwind,
- * equivalente ligero a clsx/cn (sin dependencia externa).
+ * Utilidad genérica para combinar clases condicionales de Tailwind y
+ * resolver conflictos de utilidades (ej. "px-2" vs "px-4"). Patrón estándar
+ * clsx + tailwind-merge, independiente del dominio de Copetran.
  */
 export function cn(...inputs: ClassValue[]): string {
-  const classes: string[] = [];
-  for (const input of inputs) {
-    if (!input) continue;
-    if (typeof input === 'string' || typeof input === 'number') {
-      classes.push(String(input));
-    } else {
-      for (const [key, condition] of Object.entries(input)) {
-        if (condition) classes.push(key);
-      }
-    }
-  }
-  return classes.join(' ');
+  return twMerge(clsx(inputs));
 }

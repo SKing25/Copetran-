@@ -19,31 +19,47 @@ Abre `http://localhost:5173`.
 
 ## Estructura
 
+Los imports usan el alias `@/` → `src/` (configurado en `vite.config.ts` y `tsconfig.json`).
+
 ```
 src/
   context/
-    AuthContext.tsx     Autenticación simple por rol (persistida en localStorage)
-    DataContext.tsx      Store mock en memoria: viajes, tiquetes, facturas, guías, remesas
+    AuthContext.tsx      Autenticación simple por rol (persistida en localStorage)
+    DataContext.tsx       Store mock en memoria: viajes, tiquetes, facturas, guías, remesas
   hooks/
-    useLocalStorage.ts   Hook genérico de persistencia (sin lógica de negocio)
+    useLocalStorage.ts    Persistencia genérica en localStorage
+    useDebounce.ts         Debounce genérico de un valor
+    useMediaQuery.ts        Suscripción a una media query CSS
+    useToggle.ts             Alternar un booleano (sidebar, modales)
+    index.ts                  Barril de hooks
   utils/
-    cn.ts                 Combinador de clases Tailwind (equivalente a clsx)
-    format.ts             Formato de moneda y fechas (es-CO)
+    cn.ts                  Combinador de clases Tailwind (clsx + tailwind-merge)
+    format.ts               Formato de moneda y fechas (es-CO)
   types/
-    copetran.ts            Tipos del dominio — campos snake_case idénticos al schema real
-                            (docs/parcial-primer-corte/fuentes/copetran_corregido.sql)
+    copetran.ts             Tipos del dominio — campos snake_case idénticos al schema real
+                             (docs/parcial-primer-corte/fuentes/copetran_corregido.sql)
   data/
-    mockData.ts             Datos semilla (clientes, viajes, sillas, tiquetes, guías)
+    mockData.ts              Datos semilla (clientes, viajes, sillas, tiquetes, guías)
+  layouts/
+    DashboardLayout.tsx       Shell compartido: sidebar + topbar + <Outlet /> (react-router-dom)
   components/
-    Login.tsx               Selector de rol: Cliente, Cajero de Agencia, Operario de Bodega
-    DashboardRouter.tsx      Enruta al dashboard según el rol autenticado
-    Layout.tsx               Cabecera común (usuario, rol, salir)
-    ui/                      Badge y Card genéricos
+    Login.tsx                 Selector de rol: Cliente, Cajero de Agencia, Operario de Bodega
+    DashboardRouter.tsx        Decide qué dashboard renderizar según el rol (sin shell propio)
+    ui/                        Kit de UI genérico (Button, Input, Select, Modal/AlertDialog,
+                                Spinner/SpinnerOverlay/Skeleton, Tooltip, Card, Badge) + index.ts (barril)
   dashboards/
-    ClienteDashboard.tsx     ECU-01 — Comprar Tiquete (Proceso A, canal WEB/APP)
-    CajeroDashboard.tsx      ECU-01 — Vender Tiquete (Proceso A, canal TAQUILLA)
-    OperarioDashboard.tsx    ECU-02 — Admitir y Consolidar Guía de Envío (Proceso C)
+    ClienteDashboard.tsx      ECU-01 — Comprar Tiquete (Proceso A, canal WEB/APP)
+    CajeroDashboard.tsx       ECU-01 — Vender Tiquete (Proceso A, canal TAQUILLA)
+    OperarioDashboard.tsx     ECU-02 — Admitir y Consolidar Guía de Envío (Proceso C)
 ```
+
+## Routing
+
+`react-router-dom` con `BrowserRouter` en `main.tsx`:
+
+- `/` y `/login` → `Login` (autentica contra `AuthContext` y navega a `/dashboard`).
+- `/dashboard` → `DashboardLayout` (guardia: redirige a `/login` si no hay usuario autenticado)
+  con ruta índice → `DashboardRouter`, que renderiza el dashboard del rol dentro del `<Outlet />`.
 
 ## Roles y flujos implementados
 

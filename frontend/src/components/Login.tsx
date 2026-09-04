@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import type { Rol } from '../types/copetran';
-import { Card, CardTitle } from './ui/Card';
-import { cn } from '../utils/cn';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import type { Rol } from '@/types/copetran';
+import { Card, CardTitle } from '@/components/ui/Card';
+import { cn } from '@/utils/cn';
 
 const ROLES: { rol: Rol; etiqueta: string; descripcion: string }[] = [
   { rol: 'CLIENTE', etiqueta: 'Cliente', descripcion: 'Compra tiquetes de pasajeros (Proceso A)' },
@@ -12,6 +13,7 @@ const ROLES: { rol: Rol; etiqueta: string; descripcion: string }[] = [
 
 export function Login() {
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [nombre, setNombre] = useState('');
   const [rolSeleccionado, setRolSeleccionado] = useState<Rol>('CLIENTE');
 
@@ -19,6 +21,7 @@ export function Login() {
     e.preventDefault();
     if (!nombre.trim()) return;
     login({ nombre: nombre.trim(), rol: rolSeleccionado });
+    navigate('/dashboard');
   }
 
   return (
