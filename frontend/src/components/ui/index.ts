@@ -8,3 +8,7 @@ export { Modal, AlertDialog } from './Modal';
 export type { ModalProps, AlertDialogProps } from './Modal';
 export { Spinner, SpinnerOverlay, Skeleton } from './Spinner';
 export { Tooltip } from './Tooltip';
+export { Tabs } from './Tabs';
+export type { TabItem } from './Tabs';
+export { Alert } from './Alert';
+export type { AlertVariant } from './Alert';

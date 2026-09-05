@@ -1,19 +1,14 @@
 import { useState } from 'react';
 import { Navigate, Outlet, useNavigate } from 'react-router-dom';
-import { Bus, LogOut, Menu, X } from 'lucide-react';
+import { LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { CompanyLogo } from '@/components/CompanyLogo';
 import { cn } from '@/utils/cn';
 
-const TITULO_POR_ROL: Record<string, string> = {
-  CLIENTE: 'Portal Cliente',
-  CAJERO: 'Taquilla',
-  OPERARIO: 'Bodega y Mensajería',
-};
-
 /**
- * Shell compartido de los tres dashboards: sidebar fijo + topbar + contenido
- * vía <Outlet />. No conoce lógica de negocio — solo envuelve lo que
- * DashboardRouter decida renderizar según el rol.
+ * Shell compartido de la interfaz: sidebar fijo + topbar + contenido vía
+ * <Outlet />. No conoce lógica de negocio — solo envuelve lo que
+ * DashboardRouter (las pestañas del workspace) decida renderizar.
  */
 export function DashboardLayout() {
   const { usuario, logout } = useAuth();
@@ -46,8 +41,8 @@ export function DashboardLayout() {
         )}
       >
         <div className="flex items-center justify-between gap-2 border-b border-slate-800 px-5 py-4">
-          <div className="flex items-center gap-2">
-            <Bus className="h-6 w-6 text-copetran-500" aria-hidden />
+          <div className="flex items-center gap-3">
+            <CompanyLogo />
             <span className="text-lg font-bold">Copetran</span>
           </div>
           <button
@@ -91,11 +86,11 @@ export function DashboardLayout() {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h1 className="text-sm font-semibold text-slate-900">{TITULO_POR_ROL[usuario.rol] ?? 'Copetran'}</h1>
+          <h1 className="text-sm font-semibold text-slate-900">Panel de Operación</h1>
         </header>
 
         <main className="flex-1 px-4 py-6 lg:px-6">
-          <div className="mx-auto max-w-5xl">
+          <div className="mx-auto max-w-6xl">
             <Outlet />
           </div>
         </main>

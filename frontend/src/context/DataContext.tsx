@@ -56,6 +56,17 @@ interface VenderTiqueteParams {
   idMetodoPago: MetodoPago;
   /** ECU-01: flujo base (PAGADO) o extensiones A1 (RESERVADO) / A2 (ABIERTO). */
   tipoTiquete: 'PAGADO' | 'RESERVADO' | 'ABIERTO';
+  /**
+   * Descuento aplicado sobre VALOR_TIQUETE_BASE (0-100). No corresponde a un
+   * campo del schema real ni del brief — es una convención de UI para la
+   * interfaz del Módulo de Tiquetes (código de descuento estudiante/adulto
+   * mayor). Por defecto 0, no afecta las llamadas existentes.
+   */
+  descuentoPorcentaje?: number;
+}
+
+export interface SillaConEstado extends Silla {
+  ocupada: boolean;
 }
 
 interface AdmitirGuiaParams {
@@ -77,6 +88,8 @@ interface DataContextValue {
   guias: GuiaEnvio[];
   remesas: Remesa[];
   sillasDisponibles: (idViaje: number) => Silla[];
+  /** Layout completo del bus del viaje, con estado ocupada/libre por silla (para el mapa de asientos). */
+  sillasDelViaje: (idViaje: number) => SillaConEstado[];
   registrarCliente: (datos: Omit<Cliente, 'id_cliente'>) => Cliente;
   venderTiquete: (params: VenderTiqueteParams) => Tiquete;
   cambiarEstadoTiquete: (idTiquete: number, nuevoEstado: EstadoTiquete) => boolean;
@@ -95,8 +108,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [guias, setGuias] = useLocalStorage<GuiaEnvio[]>('copetran.guias', guiasSeed);
   const [remesas, setRemesas] = useLocalStorage<Remesa[]>('copetran.remesas', remesasSeed);
 
-  const sillasDisponibles = useCallback(
-    (idViaje: number): Silla[] => {
+  const sillasDelViaje = useCallback(
+    (idViaje: number): SillaConEstado[] => {
       const viaje = viajes.find((v) => v.id_viaje === idViaje);
       if (!viaje) return [];
       const todasLasSillas = sillasPorBus[viaje.id_bus] ?? [];
@@ -111,9 +124,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           )
           .map((t) => t.id_silla),
       );
-      return todasLasSillas.filter((s) => !ocupadas.has(s.id_silla));
+      return todasLasSillas.map((s) => ({ ...s, ocupada: ocupadas.has(s.id_silla) }));
     },
     [viajes, tiquetes],
+  );
+
+  const sillasDisponibles = useCallback(
+    (idViaje: number): Silla[] => sillasDelViaje(idViaje).filter((s) => !s.ocupada),
+    [sillasDelViaje],
   );
 
   const registrarCliente = useCallback(
@@ -130,12 +148,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const venderTiquete = useCallback(
     (params: VenderTiqueteParams): Tiquete => {
       const { idViaje, idSilla, idPasajero, idCajero, idCanalVenta, idMetodoPago, tipoTiquete } = params;
+      const descuentoPorcentaje = Math.min(100, Math.max(0, params.descuentoPorcentaje ?? 0));
 
       // RF03: un tiquete por silla por viaje (UNIQUE(id_viaje, id_silla)).
       const disponibles = sillasDisponibles(idViaje);
       if (!disponibles.some((s) => s.id_silla === idSilla)) {
         throw new Error('La silla ya no está disponible para este viaje.');
       }
+
+      const valorConDescuento = Math.round(VALOR_TIQUETE_BASE * (1 - descuentoPorcentaje / 100));
 
       const idFactura = Math.max(0, ...facturas.map((f) => f.id_factura)) + 1;
       // Nota (hallazgo Sección 14.6 del brief): TIQUETE.id_factura es NOT NULL
@@ -148,7 +169,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         id_cajero: idCajero,
         id_metodo_pago: idMetodoPago,
         fecha_emision: new Date().toISOString(),
-        monto_total: tipoTiquete === 'RESERVADO' ? 0 : VALOR_TIQUETE_BASE,
+        monto_total: tipoTiquete === 'RESERVADO' ? 0 : valorConDescuento,
         cufe: tipoTiquete === 'RESERVADO' ? undefined : `CUFE-DEMO-${String(idFactura).padStart(4, '0')}`,
       };
 
@@ -305,6 +326,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       guias,
       remesas,
       sillasDisponibles,
+      sillasDelViaje,
       registrarCliente,
       venderTiquete,
       cambiarEstadoTiquete,
@@ -320,6 +342,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       guias,
       remesas,
       sillasDisponibles,
+      sillasDelViaje,
       registrarCliente,
       venderTiquete,
       cambiarEstadoTiquete,

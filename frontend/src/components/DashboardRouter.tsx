@@ -1,20 +1,21 @@
-import { useAuth } from '@/context/AuthContext';
-import { ClienteDashboard } from '@/dashboards/ClienteDashboard';
-import { CajeroDashboard } from '@/dashboards/CajeroDashboard';
-import { OperarioDashboard } from '@/dashboards/OperarioDashboard';
+import { ListChecks, Package, Ticket } from 'lucide-react';
+import { Tabs } from '@/components/ui';
+import type { TabItem } from '@/components/ui';
+import { TrazabilidadTab } from '@/components/workspace/TrazabilidadTab';
+import { TiquetesModule } from '@/components/workspace/TiquetesModule';
+import { MensajeriaModule } from '@/components/workspace/MensajeriaModule';
+
+const TABS: TabItem[] = [
+  { id: 'trazabilidad', label: 'Trazabilidad del Sistema', icon: <ListChecks className="h-4 w-4" />, content: <TrazabilidadTab /> },
+  { id: 'tiquetes', label: 'Módulo de Tiquetes (ECU-01)', icon: <Ticket className="h-4 w-4" />, content: <TiquetesModule /> },
+  { id: 'mensajeria', label: 'Módulo de Mensajería (ECU-02)', icon: <Package className="h-4 w-4" />, content: <MensajeriaModule /> },
+];
 
 /**
- * Decide qué dashboard renderizar según el rol autenticado. Se monta como
- * ruta índice dentro de <DashboardLayout /> (que aporta el shell: sidebar,
- * topbar). Cada dashboard es independiente y solo conoce su propio proceso
- * de negocio.
+ * Contenedor principal del workspace: estructura de tabs que alterna entre
+ * la trazabilidad del sistema y los dos módulos de proceso (ECU-01, ECU-02).
+ * Se monta como ruta índice dentro de <DashboardLayout />.
  */
 export function DashboardRouter() {
-  const { usuario } = useAuth();
-  if (!usuario) return null;
-
-  if (usuario.rol === 'CLIENTE') return <ClienteDashboard />;
-  if (usuario.rol === 'CAJERO') return <CajeroDashboard />;
-  if (usuario.rol === 'OPERARIO') return <OperarioDashboard />;
-  return null;
+  return <Tabs tabs={TABS} defaultTabId="trazabilidad" />;
 }
