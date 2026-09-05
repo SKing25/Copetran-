@@ -19,6 +19,7 @@ Docente: José Marcial Téllez Gómez
 
 ### Parcial primer corte (vence 7 de septiembre de 2026)
 
+- 📄 **[Informe PDF completo](docs/parcial-primer-corte/informe-parcial-primer-corte.pdf)** — los 9 componentes de la consigna en un solo documento listo para entregar
 - [Brief completo](docs/parcial-primer-corte/00-brief.md)
 - [1. Roles y actores del sistema](docs/parcial-primer-corte/01-roles-actores.md)
 - [2. Casos de uso de alto nivel (por rol)](docs/parcial-primer-corte/02-casos-de-uso-alto-nivel.md)
