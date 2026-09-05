@@ -5,9 +5,11 @@ import { cn } from '@/utils/cn';
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  /** Sufijo visual dentro del input (ej. "cm", "kg") — solo decorativo. */
+  suffix?: string;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(({ className, label, error, id, ...props }, ref) => {
+export const Input = forwardRef<HTMLInputElement, InputProps>(({ className, label, error, id, suffix, ...props }, ref) => {
   const generatedId = useId();
   const inputId = id ?? generatedId;
   return (
@@ -17,19 +19,27 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({ className, labe
           {label}
         </label>
       )}
-      <input
-        ref={ref}
-        id={inputId}
-        className={cn(
-          'w-full rounded-md border px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400',
-          'focus:outline-none focus:ring-1',
-          error
-            ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500'
-            : 'border-slate-300 focus:border-copetran-500 focus:ring-copetran-500',
-          className,
+      <div className="relative">
+        <input
+          ref={ref}
+          id={inputId}
+          className={cn(
+            'w-full rounded-md border px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400',
+            'focus:outline-none focus:ring-1',
+            error
+              ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500'
+              : 'border-slate-300 focus:border-copetran-500 focus:ring-copetran-500',
+            suffix && 'pr-9',
+            className,
+          )}
+          {...props}
+        />
+        {suffix && (
+          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium text-slate-400">
+            {suffix}
+          </span>
         )}
-        {...props}
-      />
+      </div>
       {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
     </div>
   );

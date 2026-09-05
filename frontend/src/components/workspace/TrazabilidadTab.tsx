@@ -22,18 +22,20 @@ export function TrazabilidadTab() {
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
-                <th className="py-2 pr-4 font-medium">Rol / Actor</th>
-                <th className="py-2 pr-4 font-medium">Ubicación en el organigrama</th>
-                <th className="py-2 font-medium">Interviene en</th>
+              <tr className="bg-slate-100 text-xs font-bold uppercase tracking-wider text-slate-600">
+                <th className="rounded-l-md py-2.5 pl-3 pr-4">Rol / Actor</th>
+                <th className="py-2.5 pr-4">Ubicación en el organigrama</th>
+                <th className="rounded-r-md py-2.5 pr-3">Interviene en</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {ACTORES_PRIMARIOS.map((a) => (
-                <tr key={a.rol}>
-                  <td className="py-2 pr-4 font-medium text-slate-900">{a.rol}</td>
-                  <td className="py-2 pr-4 text-slate-600">{a.ubicacion}</td>
-                  <td className="py-2 text-slate-600">{a.interviene}</td>
+                <tr key={a.rol} className="transition hover:bg-slate-50/80">
+                  <td className="py-2 pl-3 pr-4 font-medium text-slate-900">{a.rol}</td>
+                  <td className="py-2 pr-4">
+                    <span className="inline-block rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">{a.ubicacion}</span>
+                  </td>
+                  <td className="py-2 pr-3 text-slate-600">{a.interviene}</td>
                 </tr>
               ))}
             </tbody>
@@ -46,18 +48,18 @@ export function TrazabilidadTab() {
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
-                <th className="py-2 pr-4 font-medium">Rol / Actor</th>
-                <th className="py-2 pr-4 font-medium">Naturaleza</th>
-                <th className="py-2 font-medium">Interviene en</th>
+              <tr className="bg-slate-100 text-xs font-bold uppercase tracking-wider text-slate-600">
+                <th className="rounded-l-md py-2.5 pl-3 pr-4">Rol / Actor</th>
+                <th className="py-2.5 pr-4">Naturaleza</th>
+                <th className="rounded-r-md py-2.5 pr-3">Interviene en</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {ACTORES_SECUNDARIOS.map((a) => (
-                <tr key={a.rol}>
-                  <td className="py-2 pr-4 font-medium text-slate-900">{a.rol}</td>
+                <tr key={a.rol} className="transition hover:bg-slate-50/80">
+                  <td className="py-2 pl-3 pr-4 font-medium text-slate-900">{a.rol}</td>
                   <td className="py-2 pr-4 text-slate-600">{a.ubicacion}</td>
-                  <td className="py-2 text-slate-600">{a.interviene}</td>
+                  <td className="py-2 pr-3 text-slate-600">{a.interviene}</td>
                 </tr>
               ))}
             </tbody>

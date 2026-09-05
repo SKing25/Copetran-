@@ -139,15 +139,24 @@ export function MensajeriaModule() {
                 </option>
               ))}
             </Select>
-            <Input label="Peso real (kg)" type="number" min="0.1" step="0.1" value={pesoKg} onChange={(e) => setPesoKg(e.target.value)} required />
+            <Input
+              label="Peso real"
+              type="number"
+              min="0.1"
+              step="0.1"
+              value={pesoKg}
+              onChange={(e) => setPesoKg(e.target.value)}
+              suffix="kg"
+              required
+            />
           </div>
 
-          <div>
-            <p className="text-xs font-medium text-slate-600">Cubicaje (dimensiones del paquete, cm)</p>
-            <div className="mt-1.5 grid gap-3 sm:grid-cols-3">
-              <Input placeholder="Largo" type="number" min="0" step="1" value={largoCm} onChange={(e) => setLargoCm(e.target.value)} />
-              <Input placeholder="Ancho" type="number" min="0" step="1" value={anchoCm} onChange={(e) => setAnchoCm(e.target.value)} />
-              <Input placeholder="Alto" type="number" min="0" step="1" value={altoCm} onChange={(e) => setAltoCm(e.target.value)} />
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-medium text-slate-600">Cubicaje (dimensiones del paquete)</p>
+            <div className="mt-2 grid grid-cols-3 gap-3">
+              <Input placeholder="Largo" type="number" min="0" step="1" value={largoCm} onChange={(e) => setLargoCm(e.target.value)} suffix="cm" />
+              <Input placeholder="Ancho" type="number" min="0" step="1" value={anchoCm} onChange={(e) => setAnchoCm(e.target.value)} suffix="cm" />
+              <Input placeholder="Alto" type="number" min="0" step="1" value={altoCm} onChange={(e) => setAltoCm(e.target.value)} suffix="cm" />
             </div>
           </div>
 

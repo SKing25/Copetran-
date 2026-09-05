@@ -89,7 +89,7 @@ export function DashboardLayout() {
           <h1 className="text-sm font-semibold text-slate-900">Panel de Operación</h1>
         </header>
 
-        <main className="flex-1 px-4 py-6 lg:px-6">
+        <main className="flex-1 bg-slate-100 px-4 py-6 lg:px-6">
           <div className="mx-auto max-w-6xl">
             <Outlet />
           </div>

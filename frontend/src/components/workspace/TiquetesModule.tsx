@@ -111,181 +111,192 @@ export function TiquetesModule() {
         </Card>
       )}
 
-      {!esCliente && (
-        <Card>
-          <CardTitle>1. Cliente</CardTitle>
-          {!mostrarRegistro ? (
-            <div className="mt-3 flex items-end gap-3">
-              <div className="flex-1">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          {!esCliente && (
+            <Card>
+              <CardTitle>1. Cliente</CardTitle>
+              {!mostrarRegistro ? (
+                <div className="mt-3 flex items-end gap-3">
+                  <div className="flex-1">
+                    <Select
+                      label="Cliente registrado"
+                      value={idClienteSeleccionado}
+                      onChange={(e) => setIdClienteSeleccionado(e.target.value ? Number(e.target.value) : '')}
+                    >
+                      <option value="">Selecciona un cliente…</option>
+                      {clientes.map((c) => (
+                        <option key={c.id_cliente} value={c.id_cliente}>
+                          {c.nombres} {c.apellidos} — {c.documento}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                  <Button variant="secondary" size="sm" onClick={() => setMostrarRegistro(true)}>
+                    Registrar cliente nuevo
+                  </Button>
+                </div>
+              ) : (
+                <RegistroRapido
+                  onCancelar={() => setMostrarRegistro(false)}
+                  onRegistrado={(c) => {
+                    setIdClienteSeleccionado(c.id_cliente);
+                    setMostrarRegistro(false);
+                  }}
+                  registrarCliente={registrarCliente}
+                />
+              )}
+            </Card>
+          )}
+
+          {idPasajero && (
+            <Card>
+              <CardTitle>{esCliente ? '1' : '2'}. Consultar disponibilidad de viaje</CardTitle>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {viajes.map((v) => (
+                  <button
+                    key={v.id_viaje}
+                    onClick={() => {
+                      setIdViaje(v.id_viaje);
+                      setIdSilla(null);
+                    }}
+                    className={cn(
+                      'rounded-lg border px-3 py-2 text-left text-sm transition',
+                      idViaje === v.id_viaje ? 'border-copetran-500 bg-copetran-50 ring-1 ring-copetran-500' : 'border-slate-200 hover:border-slate-300',
+                    )}
+                  >
+                    <span className="font-medium text-slate-900">
+                      {v.origen_ciudad} → {v.destino_ciudad}
+                    </span>
+                    <span className="block text-xs text-slate-500">
+                      {formatDate(v.fecha)} · {v.hora_salida} · Bus {v.placa_bus}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {idViaje && (
+            <Card>
+              <CardTitle>{esCliente ? '2' : '3'}. Mapa de asientos</CardTitle>
+              <div className="mt-3">
+                <SeatMap sillas={sillas} idSillaSeleccionada={idSilla} onSeleccionar={setIdSilla} />
+              </div>
+            </Card>
+          )}
+
+          {idViaje && idSilla && (
+            <Card>
+              <CardTitle>{esCliente ? '3' : '4'}. Canal, pago, tipo de tiquete y descuento</CardTitle>
+              <div className="mt-3 grid gap-4 sm:grid-cols-3">
+                <Select label="Canal de venta" value={canal} onChange={(e) => setCanal(e.target.value as CanalVenta)} disabled={!esCliente}>
+                  {esCliente ? (
+                    <>
+                      <option value="WEB">WEB</option>
+                      <option value="APP">APP</option>
+                    </>
+                  ) : (
+                    <option value="TAQUILLA">TAQUILLA</option>
+                  )}
+                </Select>
                 <Select
-                  label="Cliente registrado"
-                  value={idClienteSeleccionado}
-                  onChange={(e) => setIdClienteSeleccionado(e.target.value ? Number(e.target.value) : '')}
+                  label="Método de pago"
+                  value={metodoPago}
+                  onChange={(e) => setMetodoPago(e.target.value as MetodoPago)}
+                  disabled={tipoTiquete === 'RESERVADO'}
                 >
-                  <option value="">Selecciona un cliente…</option>
-                  {clientes.map((c) => (
-                    <option key={c.id_cliente} value={c.id_cliente}>
-                      {c.nombres} {c.apellidos} — {c.documento}
-                    </option>
-                  ))}
+                  {esCliente ? null : <option value="EFECTIVO">Efectivo</option>}
+                  <option value="TARJETA_CREDITO">Tarjeta de crédito</option>
+                  <option value="TARJETA_DEBITO">Tarjeta débito</option>
+                  <option value="TRANSFERENCIA">Transferencia / QR</option>
+                </Select>
+                <Select label="Tipo de tiquete" value={tipoTiquete} onChange={(e) => setTipoTiquete(e.target.value as typeof tipoTiquete)}>
+                  <option value="PAGADO">Pago inmediato</option>
+                  <option value="RESERVADO">Reserva sin pago (A1)</option>
+                  <option value="ABIERTO">Tiquete abierto (A2)</option>
                 </Select>
               </div>
-              <Button variant="secondary" size="sm" onClick={() => setMostrarRegistro(true)}>
-                Registrar cliente nuevo
+
+              <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-medium text-slate-600">Código de descuento (opcional)</p>
+                <div className="mt-1.5 flex items-center gap-3">
+                  <Input
+                    value={codigoDescuento}
+                    onChange={(e) => setCodigoDescuento(e.target.value)}
+                    placeholder="Ej: ESTUDIANTE, ADULTOMAYOR"
+                    className="max-w-xs"
+                  />
+                  {codigoDescuento.trim() && (
+                    <span className={cn('text-xs font-medium', descuentoPorcentaje > 0 ? 'text-emerald-600' : 'text-rose-500')}>
+                      {descuentoPorcentaje > 0 ? `Descuento aplicado: ${descuentoPorcentaje}%` : 'Código no reconocido'}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2 text-sm text-slate-700">
+                  Valor tiquete:{' '}
+                  {descuentoPorcentaje > 0 ? (
+                    <>
+                      <span className="text-slate-400 line-through">{formatCurrency(valorBase)}</span>{' '}
+                      <span className="font-semibold text-emerald-700">{formatCurrency(valorConDescuento)}</span>
+                    </>
+                  ) : (
+                    <span className="font-semibold">{formatCurrency(valorBase)}</span>
+                  )}
+                  {tipoTiquete === 'RESERVADO' && <span className="text-slate-400"> (se cobra al confirmar el pago)</span>}
+                </p>
+              </div>
+
+              {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}
+
+              <Button onClick={confirmar} loading={comprando} className="mt-4">
+                {esCliente ? 'Confirmar compra' : 'Confirmar venta'}
               </Button>
-            </div>
-          ) : (
-            <RegistroRapido
-              onCancelar={() => setMostrarRegistro(false)}
-              onRegistrado={(c) => {
-                setIdClienteSeleccionado(c.id_cliente);
-                setMostrarRegistro(false);
-              }}
-              registrarCliente={registrarCliente}
-            />
+            </Card>
           )}
-        </Card>
-      )}
+        </div>
 
-      {idPasajero && (
-        <Card>
-          <CardTitle>{esCliente ? '1' : '2'}. Consultar disponibilidad de viaje</CardTitle>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            {viajes.map((v) => (
-              <button
-                key={v.id_viaje}
-                onClick={() => {
-                  setIdViaje(v.id_viaje);
-                  setIdSilla(null);
-                }}
-                className={cn(
-                  'rounded-lg border px-3 py-2 text-left text-sm transition',
-                  idViaje === v.id_viaje ? 'border-copetran-500 bg-copetran-50 ring-1 ring-copetran-500' : 'border-slate-200 hover:border-slate-300',
-                )}
-              >
-                <span className="font-medium text-slate-900">
-                  {v.origen_ciudad} → {v.destino_ciudad}
-                </span>
-                <span className="block text-xs text-slate-500">
-                  {formatDate(v.fecha)} · {v.hora_salida} · Bus {v.placa_bus}
-                </span>
-              </button>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {idViaje && (
-        <Card>
-          <CardTitle>{esCliente ? '2' : '3'}. Mapa de asientos</CardTitle>
-          <div className="mt-3">
-            <SeatMap sillas={sillas} idSillaSeleccionada={idSilla} onSeleccionar={setIdSilla} />
-          </div>
-        </Card>
-      )}
-
-      {idViaje && idSilla && (
-        <Card>
-          <CardTitle>{esCliente ? '3' : '4'}. Canal, pago, tipo de tiquete y descuento</CardTitle>
-          <div className="mt-3 grid gap-4 sm:grid-cols-3">
-            <Select label="Canal de venta" value={canal} onChange={(e) => setCanal(e.target.value as CanalVenta)} disabled={!esCliente}>
-              {esCliente ? (
-                <>
-                  <option value="WEB">WEB</option>
-                  <option value="APP">APP</option>
-                </>
-              ) : (
-                <option value="TAQUILLA">TAQUILLA</option>
-              )}
-            </Select>
-            <Select
-              label="Método de pago"
-              value={metodoPago}
-              onChange={(e) => setMetodoPago(e.target.value as MetodoPago)}
-              disabled={tipoTiquete === 'RESERVADO'}
-            >
-              {esCliente ? null : <option value="EFECTIVO">Efectivo</option>}
-              <option value="TARJETA_CREDITO">Tarjeta de crédito</option>
-              <option value="TARJETA_DEBITO">Tarjeta débito</option>
-              <option value="TRANSFERENCIA">Transferencia / QR</option>
-            </Select>
-            <Select label="Tipo de tiquete" value={tipoTiquete} onChange={(e) => setTipoTiquete(e.target.value as typeof tipoTiquete)}>
-              <option value="PAGADO">Pago inmediato</option>
-              <option value="RESERVADO">Reserva sin pago (A1)</option>
-              <option value="ABIERTO">Tiquete abierto (A2)</option>
-            </Select>
-          </div>
-
-          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <p className="text-xs font-medium text-slate-600">Código de descuento (opcional)</p>
-            <div className="mt-1.5 flex items-center gap-3">
-              <Input
-                value={codigoDescuento}
-                onChange={(e) => setCodigoDescuento(e.target.value)}
-                placeholder="Ej: ESTUDIANTE, ADULTOMAYOR"
-                className="max-w-xs"
-              />
-              {codigoDescuento.trim() && (
-                <span className={cn('text-xs font-medium', descuentoPorcentaje > 0 ? 'text-emerald-600' : 'text-rose-500')}>
-                  {descuentoPorcentaje > 0 ? `Descuento aplicado: ${descuentoPorcentaje}%` : 'Código no reconocido'}
-                </span>
-              )}
-            </div>
-            <p className="mt-2 text-sm text-slate-700">
-              Valor tiquete:{' '}
-              {descuentoPorcentaje > 0 ? (
-                <>
-                  <span className="text-slate-400 line-through">{formatCurrency(valorBase)}</span>{' '}
-                  <span className="font-semibold text-emerald-700">{formatCurrency(valorConDescuento)}</span>
-                </>
-              ) : (
-                <span className="font-semibold">{formatCurrency(valorBase)}</span>
-              )}
-              {tipoTiquete === 'RESERVADO' && <span className="text-slate-400"> (se cobra al confirmar el pago)</span>}
-            </p>
-          </div>
-
-          {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}
-
-          <Button onClick={confirmar} loading={comprando} className="mt-4">
-            {esCliente ? 'Confirmar compra' : 'Confirmar venta'}
-          </Button>
-        </Card>
-      )}
-
-      <Card>
-        <CardTitle>{esCliente ? 'Mis tiquetes' : 'Ventas recientes'}</CardTitle>
-        {misTiquetes.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">Todavía no hay tiquetes.</p>
-        ) : (
-          <ul className="mt-3 divide-y divide-slate-100">
-            {misTiquetes.map((t) => {
-              const viaje = viajes.find((v) => v.id_viaje === t.id_viaje);
-              const cliente = clientes.find((c) => c.id_cliente === t.id_pasajero);
-              return (
-                <li key={t.id_tiquete} className="flex items-center justify-between py-2 text-sm">
-                  <div>
-                    <p className="font-medium text-slate-900">
-                      {t.numero_tiquete} {!esCliente && cliente && <span className="font-normal text-slate-500">· {cliente.nombres} {cliente.apellidos}</span>}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {viaje ? `${viaje.origen_ciudad} → ${viaje.destino_ciudad} · ${formatDate(viaje.fecha)}` : ''} · {formatCurrency(t.valor_pagado)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge estado={t.id_estado_tiquete} />
-                    {t.id_estado_tiquete === 'RESERVADO' && (
-                      <Button variant="secondary" size="sm" onClick={() => setTiquetePorConfirmar(t)}>
-                        Confirmar pago
-                      </Button>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </Card>
+        <aside className="lg:col-span-1">
+          <Card className="sticky top-20">
+            <CardTitle className="text-base">{esCliente ? 'Mis tiquetes' : 'Ventas recientes'}</CardTitle>
+            <p className="mt-0.5 text-xs text-slate-400">Panel de auditoría</p>
+            {misTiquetes.length === 0 ? (
+              <p className="mt-3 text-sm text-slate-500">Todavía no hay tiquetes.</p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {misTiquetes.map((t) => {
+                  const viaje = viajes.find((v) => v.id_viaje === t.id_viaje);
+                  const cliente = clientes.find((c) => c.id_cliente === t.id_pasajero);
+                  return (
+                    <li key={t.id_tiquete} className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="font-mono text-xs font-semibold text-slate-800">{t.numero_tiquete}</span>
+                        <Badge estado={t.id_estado_tiquete} className="shrink-0" />
+                      </div>
+                      {!esCliente && cliente && (
+                        <p className="mt-1 truncate text-xs text-slate-500">
+                          {cliente.nombres} {cliente.apellidos}
+                        </p>
+                      )}
+                      <p className="mt-1 truncate text-xs text-slate-500">
+                        {viaje ? `${viaje.origen_ciudad} → ${viaje.destino_ciudad}` : ''}
+                      </p>
+                      <div className="mt-1.5 flex items-center justify-between border-t border-dashed border-slate-300 pt-1.5">
+                        <span className="font-mono text-xs text-slate-600">{formatCurrency(t.valor_pagado)}</span>
+                        {t.id_estado_tiquete === 'RESERVADO' && (
+                          <Button variant="secondary" size="sm" onClick={() => setTiquetePorConfirmar(t)} className="!px-2 !py-1 text-[11px]">
+                            Confirmar pago
+                          </Button>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Card>
+        </aside>
+      </div>
 
       <AlertDialog
         open={tiquetePorConfirmar !== null}
