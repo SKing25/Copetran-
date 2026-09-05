@@ -19,6 +19,9 @@
 
 \definecolor{copetranblue}{HTML}{1D4ED8}
 \definecolor{tablehead}{HTML}{EFF6FF}
+\definecolor{tablestripe}{HTML}{F4F6F9}
+
+\renewcommand{\arraystretch}{1.25}
 
 \hypersetup{
   colorlinks=true,
@@ -125,6 +128,7 @@ caso de uso --- coherente con el requerimiento no funcional RNF01 (control de ac
 
 \subsection{Actores primarios}
 
+{\rowcolors{2}{tablestripe}{white}
 \begin{longtable}{L{3.6cm} L{4.6cm} L{6.5cm}}
 \toprule
 \rowcolor{tablehead}\textbf{Rol / Actor} & \textbf{Ubicación en el organigrama} & \textbf{Interviene en} \\
@@ -145,9 +149,11 @@ Gerencia General / Direcciones & Transversal & Aprobación de rutas (K), gestió
 Auditoría Interna & Standalone, reporta a Gerencia & Verificación documental (B), trazabilidad (RNF06) \\
 \bottomrule
 \end{longtable}
+}
 
 \subsection{Actores secundarios / externos}
 
+{\rowcolors{2}{tablestripe}{white}
 \begin{longtable}{L{5.5cm} L{2.8cm} L{6.4cm}}
 \toprule
 \rowcolor{tablehead}\textbf{Rol / Actor} & \textbf{Naturaleza} & \textbf{Interviene en} \\
@@ -158,6 +164,7 @@ Sistema de Pagos & Externo, sistema & Confirmación de pago (efectivo, débito, 
 Sistema de Facturación Electrónica (DIAN) & Externo, sistema & Emisión de CUFE (RF04, RNF07) \\
 \bottomrule
 \end{longtable}
+}
 
 % ---------------------------------------------------------------------------
 \section{Casos de Uso de Alto Nivel}
@@ -239,6 +246,7 @@ por las siguientes razones:
 
 \subsection{ECU-01 --- Comprar Tiquete de Pasajero}
 
+{\rowcolors{1}{tablestripe}{white}
 \begin{longtable}{L{3.2cm} L{11.3cm}}
 \toprule
 \textbf{ID} & ECU-01 \\
@@ -265,9 +273,11 @@ por las siguientes razones:
 \textbf{Frecuencia de uso} & Alta --- varias veces por minuto en horas pico, por agencia. \\
 \bottomrule
 \end{longtable}
+}
 
 \subsection{ECU-02 --- Admitir y Consolidar Guía de Envío}
 
+{\rowcolors{1}{tablestripe}{white}
 \begin{longtable}{L{3.2cm} L{11.3cm}}
 \toprule
 \textbf{ID} & ECU-02 \\
@@ -293,6 +303,7 @@ por las siguientes razones:
 \textbf{Frecuencia de uso} & Alta --- continua durante horario operativo, por bodega/hub. \\
 \bottomrule
 \end{longtable}
+}
 
 % ---------------------------------------------------------------------------
 \section{Diagrama de Clases DAO}

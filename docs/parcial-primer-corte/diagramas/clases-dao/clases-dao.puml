@@ -2,8 +2,8 @@
 title Diagrama de Clases DAO — Venta de Tiquetes y Mensajería (Copetran)
 skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
-skinparam nodesep 20
-skinparam ranksep 40
+skinparam nodesep 30
+skinparam ranksep 55
 
 package "Capa de Acceso a Datos (DAO)" {
   interface GenericDAO<T> {
@@ -147,13 +147,13 @@ package "Capa de Entidades (Modelo de Dominio)" {
 
   Tiquete "*" -up-> "1" ViajeProgramado
   Tiquete "1" -up-> "1" Factura
-  Tiquete "*" --> "1" Cliente : id_pasajero
-  Factura "*" --> "1" Cliente : id_cliente
+  Tiquete "*" -down-> "1" Cliente : id_pasajero
   Factura "*" --> "1" Empleado : id_cajero
-  GuiaEnvio "*" --> "0..1" Remesa
-  GuiaEnvio "*" --> "1" Cliente : id_remitente
+  Factura "*" -down-> "1" Cliente : id_cliente
+  GuiaEnvio "*" -down-> "0..1" Remesa
+  GuiaEnvio "*" -down-> "1" Cliente : id_remitente
   GuiaEnvio "*" -up-> "0..1" Factura
-  Remesa "*" --> "1" Cliente : id_remitente
+  Remesa "*" -down-> "1" Cliente : id_remitente
 
   note bottom of Cliente
     Cliente cumple el rol de remitente
