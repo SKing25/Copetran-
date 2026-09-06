@@ -130,8 +130,12 @@ export function Home() {
             {/* Logo y Slogan */}
             <div className="flex items-center gap-3">
               <Link to="/" className="flex items-center gap-3 group">
-                <div className="h-11 w-11 rounded-xl bg-gradient-to-tr from-copetran-600 via-blue-600 to-amber-400 flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition">
-                  <Bus className="h-6 w-6 text-white" />
+                <div className="h-11 w-11 rounded-xl bg-copetran-600 p-0.5 flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition overflow-hidden">
+                  <img
+                    src="/assets/copetran-square.png"
+                    alt="Copetran"
+                    className="h-full w-full object-cover rounded-lg"
+                  />
                 </div>
                 <div>
                   <span className="text-2xl font-black tracking-wider text-white flex items-center gap-1">
@@ -955,9 +959,13 @@ export function Home() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
             {/* Columna 1: Datos de Empresa */}
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="h-8 w-8 rounded-lg bg-copetran-600 flex items-center justify-center text-white font-bold">
-                  <Bus className="h-4 w-4" />
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="h-9 w-9 rounded-xl bg-copetran-600 p-0.5 flex items-center justify-center overflow-hidden">
+                  <img
+                    src="/assets/copetran-square.png"
+                    alt="Copetran"
+                    className="h-full w-full object-cover rounded-lg"
+                  />
                 </div>
                 <span className="text-lg font-black text-white">COPETRAN</span>
               </div>

@@ -96,6 +96,7 @@ interface DataContextValue {
   admitirGuia: (params: AdmitirGuiaParams) => GuiaEnvio;
   consolidarEnRemesa: (idGuia: number, idRemesaExistente?: number) => void;
   cambiarEstadoGuia: (idGuia: number, nuevoEstado: EstadoGuia) => boolean;
+  restablecerDatosSemilla: () => void;
 }
 
 const DataContext = createContext<DataContextValue | undefined>(undefined);
@@ -317,6 +318,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [guias, setGuias],
   );
 
+  const restablecerDatosSemilla = useCallback(() => {
+    setClientes(clientesSeed);
+    setTiquetes(tiquetesSeed);
+    setFacturas(facturasSeed);
+    setGuias(guiasSeed);
+    setRemesas(remesasSeed);
+  }, [setClientes, setTiquetes, setFacturas, setGuias, setRemesas]);
+
   const value = useMemo<DataContextValue>(
     () => ({
       clientes,
@@ -333,6 +342,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       admitirGuia,
       consolidarEnRemesa,
       cambiarEstadoGuia,
+      restablecerDatosSemilla,
     }),
     [
       clientes,
@@ -349,6 +359,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       admitirGuia,
       consolidarEnRemesa,
       cambiarEstadoGuia,
+      restablecerDatosSemilla,
     ],
   );
 

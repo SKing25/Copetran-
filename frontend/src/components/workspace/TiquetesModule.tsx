@@ -4,10 +4,11 @@ import { useAuth } from '@/context/AuthContext';
 import { useData } from '@/context/DataContext';
 import { useLocalStorage } from '@/hooks';
 import type { CanalVenta, Cliente, MetodoPago, Tiquete } from '@/types/copetran';
-import { AlertDialog, Badge, Button, Card, CardTitle, Input, Select } from '@/components/ui';
+import { AlertDialog, Badge, Button, Card, CardTitle, Input, Modal, Select } from '@/components/ui';
 import { SeatMap } from './SeatMap';
 import { cn } from '@/utils/cn';
 import { formatCurrency, formatDate } from '@/utils/format';
+import { Printer, QrCode, Ticket as TicketIcon, CheckCircle2 } from 'lucide-react';
 
 /**
  * Códigos de descuento de demostración para el "flujo extendido de
@@ -29,7 +30,7 @@ const CODIGOS_DESCUENTO: Record<string, number> = {
  */
 export function TiquetesModule() {
   const { usuario } = useAuth();
-  const { clientes, viajes, sillasDelViaje, venderTiquete, tiquetes, registrarCliente, cambiarEstadoTiquete } = useData();
+  const { clientes, viajes, facturas, sillasDelViaje, venderTiquete, tiquetes, registrarCliente, cambiarEstadoTiquete } = useData();
 
   const esCliente = usuario?.rol === 'CLIENTE';
 
@@ -47,6 +48,7 @@ export function TiquetesModule() {
   const [error, setError] = useState<string | null>(null);
   const [ultimoTiquete, setUltimoTiquete] = useState<Tiquete | null>(null);
   const [tiquetePorConfirmar, setTiquetePorConfirmar] = useState<Tiquete | null>(null);
+  const [tiqueteBoleto, setTiqueteBoleto] = useState<Tiquete | null>(null);
 
   const idPasajero = esCliente ? clienteActual?.id_cliente ?? null : idClienteSeleccionado || null;
 
@@ -81,6 +83,7 @@ export function TiquetesModule() {
         descuentoPorcentaje,
       });
       setUltimoTiquete(tiquete);
+      setTiqueteBoleto(tiquete);
       setIdViaje(null);
       setIdSilla(null);
       setCodigoDescuento('');
@@ -103,11 +106,15 @@ export function TiquetesModule() {
       </div>
 
       {ultimoTiquete && (
-        <Card className="border-emerald-300 bg-emerald-50">
+        <Card className="border-emerald-300 bg-emerald-50 flex items-center justify-between p-4">
           <p className="text-sm font-medium text-emerald-800">
-            Tiquete {ultimoTiquete.numero_tiquete} generado — estado <Badge estado={ultimoTiquete.id_estado_tiquete} /> ·{' '}
-            {formatCurrency(ultimoTiquete.valor_pagado)}
+            Tiquete {ultimoTiquete.numero_tiquete} generado con éxito — estado{' '}
+            <Badge estado={ultimoTiquete.id_estado_tiquete} /> · {formatCurrency(ultimoTiquete.valor_pagado)}
           </p>
+          <Button size="sm" onClick={() => setTiqueteBoleto(ultimoTiquete)} className="gap-1.5 shrink-0">
+            <TicketIcon className="h-3.5 w-3.5" />
+            Ver Pase de Abordaje
+          </Button>
         </Card>
       )}
 
@@ -281,13 +288,23 @@ export function TiquetesModule() {
                       <p className="mt-1 truncate text-xs text-slate-500">
                         {viaje ? `${viaje.origen_ciudad} → ${viaje.destino_ciudad}` : ''}
                       </p>
-                      <div className="mt-1.5 flex items-center justify-between border-t border-dashed border-slate-300 pt-1.5">
-                        <span className="font-mono text-xs text-slate-600">{formatCurrency(t.valor_pagado)}</span>
-                        {t.id_estado_tiquete === 'RESERVADO' && (
-                          <Button variant="secondary" size="sm" onClick={() => setTiquetePorConfirmar(t)} className="!px-2 !py-1 text-[11px]">
-                            Confirmar pago
-                          </Button>
-                        )}
+                      <div className="mt-2 flex items-center justify-between border-t border-dashed border-slate-300 pt-1.5">
+                        <span className="font-mono text-xs font-bold text-slate-700">{formatCurrency(t.valor_pagado)}</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setTiqueteBoleto(t)}
+                            className="text-[11px] font-bold text-copetran-600 hover:text-copetran-800 underline flex items-center gap-1"
+                          >
+                            <TicketIcon className="h-3 w-3" />
+                            Ver Boleto
+                          </button>
+                          {t.id_estado_tiquete === 'RESERVADO' && (
+                            <Button variant="secondary" size="sm" onClick={() => setTiquetePorConfirmar(t)} className="!px-2 !py-0.5 text-[10px]">
+                              Pagar
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </li>
                   );
@@ -311,6 +328,142 @@ export function TiquetesModule() {
         }
         confirmLabel="Sí, confirmar pago"
       />
+
+      {/* MODAL PASE DE ABORDAJE / TIQUETE ELECTRÓNICO IMPRIMIBLE */}
+      {tiqueteBoleto && (
+        <Modal
+          open={true}
+          onClose={() => setTiqueteBoleto(null)}
+          className="max-w-xl p-0 overflow-hidden border-2 border-copetran-600 rounded-3xl"
+        >
+          {/* Cabecera del Boleto */}
+          <div className="bg-gradient-to-r from-copetran-700 via-copetran-600 to-blue-700 text-white p-5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-white p-0.5 rounded-xl shadow-md flex items-center justify-center overflow-hidden">
+                <img src="/assets/copetran-square.png" alt="Copetran" className="h-full w-full object-cover rounded-lg" />
+              </div>
+              <div>
+                <h3 className="text-base font-black tracking-wide flex items-center gap-2">
+                  PASE DE ABORDAJE ELECTRÓNICO
+                </h3>
+                <p className="text-[10px] text-amber-300 font-semibold uppercase tracking-widest">
+                  Copetran — La Fuerza Que Mueve a Colombia
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] font-mono text-blue-200 block">TIQUETE Nº</span>
+              <span className="font-mono text-sm font-black text-amber-300">{tiqueteBoleto.numero_tiquete}</span>
+            </div>
+          </div>
+
+          {/* Cuerpo del Boleto */}
+          <div className="p-6 bg-slate-50 space-y-4">
+            {/* Ruta y Silla */}
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Trayecto</span>
+                <p className="text-lg font-black text-slate-900">
+                  {viajes.find((v) => v.id_viaje === tiqueteBoleto.id_viaje)?.origen_ciudad ?? 'Bucaramanga'} →{' '}
+                  {viajes.find((v) => v.id_viaje === tiqueteBoleto.id_viaje)?.destino_ciudad ?? 'Bogotá'}
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Salida:{' '}
+                  <strong>
+                    {viajes.find((v) => v.id_viaje === tiqueteBoleto.id_viaje)?.hora_salida ?? '06:00'} hrs
+                  </strong>{' '}
+                  • Fecha:{' '}
+                  {formatDate(viajes.find((v) => v.id_viaje === tiqueteBoleto.id_viaje)?.fecha ?? '2026-09-08')}
+                </p>
+              </div>
+
+              <div className="text-center bg-copetran-50 border border-copetran-200 rounded-xl px-4 py-2">
+                <span className="text-[10px] font-bold text-copetran-700 uppercase block">Silla Asignada</span>
+                <span className="text-2xl font-black text-copetran-700">
+                  #{tiqueteBoleto.id_silla % 100}
+                </span>
+                <span className="text-[9px] font-semibold text-slate-500 block">
+                  {tiqueteBoleto.id_silla % 100 <= 8 ? 'Piso 1 · VIP Cama' : 'Piso 2 · Confort'}
+                </span>
+              </div>
+            </div>
+
+            {/* Datos del Pasajero y Facturación */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Pasajero</span>
+                <strong className="text-slate-800 text-sm">
+                  {(() => {
+                    const c = clientes.find((cl) => cl.id_cliente === tiqueteBoleto.id_pasajero);
+                    return c ? `${c.nombres} ${c.apellidos}` : 'Pasajero General';
+                  })()}
+                </strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Documento</span>
+                <strong className="text-slate-800 text-sm">
+                  {clientes.find((cl) => cl.id_cliente === tiqueteBoleto.id_pasajero)?.documento ?? '1098765432'}
+                </strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Estado</span>
+                <Badge estado={tiqueteBoleto.id_estado_tiquete} className="mt-0.5" />
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Canal de Venta</span>
+                <span className="font-semibold text-slate-700">{tiqueteBoleto.id_canal_venta}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Método de Pago</span>
+                <span className="font-semibold text-slate-700">
+                  {facturas.find((f) => f.id_factura === tiqueteBoleto.id_factura)?.id_metodo_pago ?? 'EFECTIVO'}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Total Pagado</span>
+                <strong className="text-copetran-600 font-extrabold text-sm">
+                  {formatCurrency(tiqueteBoleto.valor_pagado)}
+                </strong>
+              </div>
+            </div>
+
+            {/* Simulación de QR y DIAN / CUFE */}
+            <div className="flex items-center justify-between bg-white p-3.5 rounded-2xl border border-dashed border-slate-300">
+              <div className="flex items-center gap-3">
+                <div className="h-16 w-16 bg-slate-900 text-white rounded-xl flex items-center justify-center p-1.5 shadow-sm">
+                  <QrCode className="h-full w-full text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-slate-800 flex items-center gap-1">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                    Boleto Válido para Abordaje
+                  </p>
+                  <p className="text-[10px] font-mono text-slate-500 mt-0.5">
+                    CUFE: 84a9f...38bc (Factura Electrónica DIAN)
+                  </p>
+                  <p className="text-[10px] text-slate-400">Presenta este comprobante en taquilla o abordaje.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Botones de acción */}
+          <div className="p-4 bg-slate-100 border-t border-slate-200 flex items-center justify-between">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => window.print()}
+              className="gap-2 font-bold"
+            >
+              <Printer className="h-4 w-4" />
+              Imprimir Pasaje
+            </Button>
+            <Button size="sm" onClick={() => setTiqueteBoleto(null)}>
+              Cerrar
+            </Button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
