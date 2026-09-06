@@ -1,0 +1,32 @@
+@startuml casos_uso_alto_nivel_proceso_a
+title Diagrama de Casos de Uso de Alto Nivel — Proceso A: Venta de Tiquetes de Pasajeros
+left to right direction
+skinparam packageStyle rectangle
+
+actor Cliente
+actor "Cajero de\nAgencia" as Cajero
+actor "Auxiliar de\nDespacho" as Auxiliar
+actor "Sistema de\nPagos" as Pagos
+
+rectangle "Proceso A — Venta de Tiquetes" {
+  usecase "Comprar Tiquete" as UC1
+  usecase "Consultar Disponibilidad\nde Viaje" as UC2
+  usecase "Reprogramar Tiquete\nAbierto" as UC3
+  usecase "Cancelar Tiquete" as UC4
+  usecase "Vender Tiquete" as UC5
+  usecase "Emitir Factura" as UC6
+  usecase "Controlar Abordaje" as UC7
+}
+
+Cliente -- UC1
+Cliente -- UC2
+Cliente -- UC3
+Cliente -- UC4
+Cajero -- UC5
+Cajero -- UC6
+Cajero -- UC3
+Auxiliar -- UC7
+
+UC1 ..> Pagos : notifica
+UC5 ..> Pagos : notifica
+@enduml

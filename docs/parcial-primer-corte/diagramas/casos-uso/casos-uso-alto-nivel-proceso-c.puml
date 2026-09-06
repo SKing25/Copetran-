@@ -1,0 +1,30 @@
+@startuml casos_uso_alto_nivel_proceso_c
+title Diagrama de Casos de Uso de Alto Nivel — Proceso C: Admisión y Consolidación de Mensajería
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Cliente\n(Remitente/Destinatario)" as Cliente
+actor "Operario de\nBodega" as Operario
+actor "Conductor de Vehículo\nde Reparto" as Conductor
+actor "Sistema de Facturación\nElectrónica (DIAN)" as DIAN
+
+rectangle "Proceso C — Mensajería" {
+  usecase "Enviar Encomienda" as UC1
+  usecase "Consultar Estado\nde Envío" as UC2
+  usecase "Admitir Guía\nde Envío" as UC3
+  usecase "Clasificar Mercancía" as UC4
+  usecase "Consolidar Remesa" as UC5
+  usecase "Actualizar Estado\nde Guía" as UC6
+  usecase "Confirmar Entrega de\nÚltima Milla" as UC7
+}
+
+Cliente -- UC1
+Cliente -- UC2
+Operario -- UC3
+Operario -- UC4
+Operario -- UC5
+Operario -- UC6
+Conductor -- UC7
+
+UC3 ..> DIAN : notifica CUFE
+@enduml

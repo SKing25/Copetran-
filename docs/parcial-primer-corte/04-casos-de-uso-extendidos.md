@@ -15,6 +15,8 @@
 - **`<<extend>>` Reprogramar Tiquete Abierto** (Proceso G) — extiende cuando existe un tiquete en estado
   `ABIERTO` dentro de la fecha límite.
 
+![Diagrama de Caso de Uso Extendido — CUE-01](diagramas/casos-uso/casos_uso_extendido_cue01.png)
+
 ## CUE-02 — Admitir y Consolidar Guía de Envío (Proceso C)
 
 - **Actor principal:** Operario de Bodega
@@ -28,3 +30,5 @@
   guías pendientes.
 - **`<<extend>>` Marcar Guía con Novedad** — extiende el flujo de seguimiento cuando el envío queda
   retenido (estado `NOVEDAD`).
+
+![Diagrama de Caso de Uso Extendido — CUE-02](diagramas/casos-uso/casos_uso_extendido_cue02.png)

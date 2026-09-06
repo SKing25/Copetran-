@@ -1,0 +1,28 @@
+@startuml casos_uso_extendido_cue02
+title Diagrama de Caso de Uso Extendido — CUE-02: Admitir y Consolidar Guía de Envío (Proceso C)
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Operario de\nBodega" as Operario
+actor "Cliente\n(Remitente)" as Remitente
+actor "Sistema de Facturación\nElectrónica" as Facturacion
+
+rectangle "CUE-02" {
+  usecase "Admitir y Consolidar\nGuía de Envío" as Base
+  usecase "Clasificar Mercancía" as Inc1
+  usecase "Calcular Tarifa\nde Envío" as Inc2
+  usecase "Asociar Guía a\nFactura Inmediata" as Ext1
+  usecase "Consolidar en Remesa" as Ext2
+  usecase "Marcar Guía\ncon Novedad" as Ext3
+}
+
+Operario -- Base
+Remitente -- Base
+Base ..> Facturacion : notifica
+
+Base ..> Inc1 : <<include>>
+Base ..> Inc2 : <<include>>
+Ext1 ..> Base : <<extend>>
+Ext2 ..> Base : <<extend>>
+Ext3 ..> Base : <<extend>>
+@enduml

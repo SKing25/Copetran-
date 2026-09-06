@@ -20,3 +20,16 @@
 - **Administrador de Servidores:** Ejecutar Copia de Respaldo, Aplicar Parches de Seguridad.
 - **Gerencia General:** Aprobar Apertura de Ruta/Agencia, Gestionar Estructura Organizacional.
 - **Auditoría Interna:** Verificar Documentación de Vehículo/Conductor, Consultar Historial Auditable.
+
+## Diagramas gráficos (por proceso elegido)
+
+Representación gráfica UML de los casos de uso de alto nivel correspondientes a los dos procesos
+elegidos en [03-procesos-principales.md](03-procesos-principales.md).
+
+### Proceso A — Venta de Tiquetes de Pasajeros
+
+![Diagrama de Casos de Uso de Alto Nivel — Proceso A](diagramas/casos-uso/casos_uso_alto_nivel_proceso_a.png)
+
+### Proceso C — Admisión y Consolidación de Mensajería
+
+![Diagrama de Casos de Uso de Alto Nivel — Proceso C](diagramas/casos-uso/casos_uso_alto_nivel_proceso_c.png)

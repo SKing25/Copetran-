@@ -32,3 +32,10 @@
 | **Flujos alternativos** | **A1 (Pago inmediato):** en el paso 3, si el envío se paga al momento, se asocia `id_factura`.<br>**A2 (Envío sin remesa):** en el paso 5, una guía puede viajar sin consolidarse en remesa.<br>**A3 (Novedad):** en cualquier punto del paso 6, el estado puede pasar a `NOVEDAD` si el envío queda retenido. |
 | **Reglas de negocio** | RF05 (cálculo automático de valor según peso/categoría, seguimiento de estado), RF11 (hallazgo: el modelo aún no registra qué empleado ejecuta la admisión — pendiente de corrección), RF17 (los totales de la remesa deben recalcularse a partir de sus guías — pendiente de trigger, ver auditoría CR-1 T-2 Sección 14.6). |
 | **Frecuencia de uso** | Alta — continua durante horario operativo, por bodega/hub. |
+
+> **Aclaración:** los hallazgos RF11 y RF17 se documentan aquí de forma **intencionalmente sin
+> corregir** en este parcial — no son un olvido. Ambos son responsabilidad del **modelo relacional**
+> del CR-1 T-2 (`copetran_corregido.sql`), no del diseño de interfaz de usuario que exige esta
+> consigna; corregirlos implicaría alterar el schema (agregar `id_empleado` a `GUIA_ENVIO` y un
+> trigger de recálculo en `REMESA`), lo cual está fuera del alcance de este entregable y queda descrito
+> como pendiente de decisión del equipo (CR-1 T-2, Sección 14.6).

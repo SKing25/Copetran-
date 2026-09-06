@@ -1,0 +1,30 @@
+@startuml casos_uso_extendido_cue01
+title Diagrama de Caso de Uso Extendido — CUE-01: Comprar Tiquete de Pasajero (Proceso A)
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Cajero de\nAgencia" as Cajero
+actor Cliente
+actor "Sistema de\nPagos" as Pagos
+actor "Auxiliar de\nDespacho" as Auxiliar
+
+rectangle "CUE-01" {
+  usecase "Comprar Tiquete\nde Pasajero" as Base
+  usecase "Consultar Disponibilidad\nde Silla" as Inc1
+  usecase "Generar Factura" as Inc2
+  usecase "Reservar Tiquete Sin\nPago Inmediato" as Ext1
+  usecase "Habilitar Tiquete\nAbierto" as Ext2
+  usecase "Reprogramar Tiquete\nAbierto" as Ext3
+}
+
+Cajero -- Base
+Cliente -- Base
+Auxiliar -- Ext3
+Base ..> Pagos : notifica
+
+Base ..> Inc1 : <<include>>
+Base ..> Inc2 : <<include>>
+Ext1 ..> Base : <<extend>>
+Ext2 ..> Base : <<extend>>
+Ext3 ..> Base : <<extend>>
+@enduml

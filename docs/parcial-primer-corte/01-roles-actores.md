@@ -34,3 +34,21 @@
 Se listan los 22 grupos de cargo ya documentados en la Sección 6 del CR-1 T-2 como base; para este
 parcial se consolidan en los roles anteriores porque son los que efectivamente operan pantallas o son
 actores de caso de uso — coherente con RNF01 (control de acceso por cargo).
+
+## Aclaración: tres niveles de detalle, no una inconsistencia
+
+El CR-1 T-2 y este parcial manejan intencionalmente **tres niveles de detalle distintos** sobre el
+personal de Copetran, que no son inconsistentes entre sí sino que responden a propósitos diferentes:
+
+1. **22 grupos de cargo entrevistados** (CR-1 T-2, Sección 6) — nivel de *levantamiento de
+   información*: las preguntas de entrevista se organizaron por grupo funcional, no por cargo
+   individual.
+2. **30 cargos individuales del organigrama** (CR-1 T-2, Sección 4, Figura 1) — nivel de *estructura
+   organizacional*: cada caja del organigrama es un cargo formal dentro de una dirección o área.
+3. **13 actores de interfaz** (tabla de actores primarios de este documento) — nivel de *caso de uso*:
+   son los roles que efectivamente operan una pantalla del sistema o participan como actor en un
+   diagrama de casos de uso, coherente con RNF01.
+
+Un mismo cargo del organigrama (nivel 2) puede pertenecer a un grupo de entrevista (nivel 1) y, si
+opera pantallas, aparecer también como actor de interfaz (nivel 3) — por eso los tres números (22, 30,
+13) son correctos simultáneamente y no requieren conciliarse en una única lista.

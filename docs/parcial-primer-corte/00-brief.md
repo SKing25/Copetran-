@@ -392,6 +392,15 @@ Nota: en el modelo relacional actual `estado_viaje` es texto libre (hallazgo de 
 Sección 14.6). Este diagrama formaliza el comportamiento real descrito en el Proceso B, y sirve como
 insumo para migrar el campo a `MULTITABLA_PARAMETRO` en una futura iteración.
 
+**Aporte propio de este parcial:** a diferencia de los diagramas de estados de `Tiquete`
+(`ESTADO_TIQUETE`) y `GuiaEnvio` (`ESTADO_GUIA`), que solo grafican estados que **ya existen**
+parametrizados en `MULTITABLA_PARAMETRO` del modelo relacional del CR-1 T-2, el diagrama de
+`ViajeProgramado` es el **único de los tres** que formaliza un ciclo de vida que **todavía no está
+representado** en la base de datos (el campo sigue siendo texto libre). Es decir, este diagrama no
+documenta un estado existente sino que **propone** uno — vale la pena mencionarlo explícitamente en la
+sustentación oral para que quede claro que es un aporte de diseño de este parcial y no una simple
+transcripción del modelo ya construido.
+
 ```plantuml
 @startuml estado_viaje_programado
 title Diagrama de Estados — Clase ViajeProgramado
