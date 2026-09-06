@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Bus } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import type { Rol } from '@/types/copetran';
 import { Card, CardTitle } from '@/components/ui/Card';
@@ -25,11 +26,26 @@ export function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <Card className="w-full max-w-md">
-        <CardTitle>Copetran — Iniciar sesión</CardTitle>
+    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-8">
+      <Card className="w-full max-w-md shadow-xl border border-slate-200">
+        <div className="mb-4">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-copetran-600 hover:text-copetran-700 transition"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Volver a la página principal
+          </Link>
+        </div>
+
+        <div className="flex items-center gap-2.5 mb-2">
+          <div className="h-8 w-8 rounded-lg bg-copetran-600 flex items-center justify-center text-white font-bold">
+            <Bus className="h-4 w-4" />
+          </div>
+          <CardTitle>Copetran — Iniciar sesión</CardTitle>
+        </div>
         <p className="mt-1 text-sm text-slate-500">
-          Roles del sistema documentados en el parcial primer corte (Sección 1).
+          Selecciona tu rol para acceder al sistema (definidos en la Sección 1 del parcial).
         </p>
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
