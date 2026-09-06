@@ -29,6 +29,9 @@ Docente: José Marcial Téllez Gómez
 
 **Diagramas** (`docs/parcial-primer-corte/diagramas/`):
 
+- Diagramas de casos de uso:
+  - Alto nivel — [Proceso A](docs/parcial-primer-corte/diagramas/casos-uso/casos-uso-alto-nivel-proceso-a.puml) ([PNG](docs/parcial-primer-corte/diagramas/casos-uso/casos_uso_alto_nivel_proceso_a.png)) / [Proceso C](docs/parcial-primer-corte/diagramas/casos-uso/casos-uso-alto-nivel-proceso-c.puml) ([PNG](docs/parcial-primer-corte/diagramas/casos-uso/casos_uso_alto_nivel_proceso_c.png))
+  - Extendido — [CUE-01](docs/parcial-primer-corte/diagramas/casos-uso/casos-uso-extendido-cue-01.puml) ([PNG](docs/parcial-primer-corte/diagramas/casos-uso/casos_uso_extendido_cue01.png)) / [CUE-02](docs/parcial-primer-corte/diagramas/casos-uso/casos-uso-extendido-cue-02.puml) ([PNG](docs/parcial-primer-corte/diagramas/casos-uso/casos_uso_extendido_cue02.png))
 - [Diagrama de clases DAO](docs/parcial-primer-corte/diagramas/clases-dao/clases-dao.puml) ([PNG](docs/parcial-primer-corte/diagramas/clases-dao/clases_dao.png))
 - Diagramas de estados:
   - [Tiquete](docs/parcial-primer-corte/diagramas/estados/estado-tiquete.puml) ([PNG](docs/parcial-primer-corte/diagramas/estados/estado_tiquete.png))
