@@ -115,7 +115,7 @@ siguientes en el mismo orden en que fueron solicitados:
 \end{enumerate}
 
 Toda la documentación fuente de este informe reside en el repositorio de trabajo, bajo
-\texttt{docs/parcial-primer-corte/}, organizada en un archivo por componente para facilitar su
+\path{docs/parcial-primer-corte/}, organizada en un archivo por componente para facilitar su
 revisión independiente.
 
 % ---------------------------------------------------------------------------
@@ -166,6 +166,28 @@ Sistema de Facturación Electrónica (DIAN) & Externo, sistema & Emisión de CUF
 \end{longtable}
 }
 
+\subsection*{Aclaración: tres niveles de detalle, no una inconsistencia}
+
+El CR-1 T-2 y este parcial manejan intencionalmente \textbf{tres niveles de detalle distintos} sobre
+el personal de Copetran, que no son inconsistentes entre sí sino que responden a propósitos
+diferentes:
+
+\begin{enumerate}[nosep]
+  \item \textbf{22 grupos de cargo entrevistados} (CR-1 T-2, Sección 6) --- nivel de \emph{levantamiento
+  de información}: las preguntas de entrevista se organizaron por grupo funcional, no por cargo
+  individual.
+  \item \textbf{30 cargos individuales del organigrama} (CR-1 T-2, Sección 4, Figura 1) --- nivel de
+  \emph{estructura organizacional}: cada caja del organigrama es un cargo formal dentro de una
+  dirección o área.
+  \item \textbf{13 actores de interfaz} (tabla de actores primarios anterior) --- nivel de \emph{caso
+  de uso}: son los roles que efectivamente operan una pantalla del sistema o participan como actor en
+  un diagrama de casos de uso, coherente con RNF01.
+\end{enumerate}
+
+Un mismo cargo del organigrama (nivel 2) puede pertenecer a un grupo de entrevista (nivel 1) y, si
+opera pantallas, aparecer también como actor de interfaz (nivel 3) --- por eso los tres números (22,
+30, 13) son correctos simultáneamente y no requieren conciliarse en una única lista.
+
 % ---------------------------------------------------------------------------
 \section{Casos de Uso de Alto Nivel}
 % ---------------------------------------------------------------------------
@@ -190,6 +212,22 @@ docente (\emph{SEM 04 1 METODOLOGIAS RUP.pdf}):
   \item \textbf{Auditoría Interna:} Verificar Documentación de Vehículo/Conductor, Consultar Historial Auditable.
 \end{itemize}
 
+A continuación, la representación gráfica UML de los casos de uso de alto nivel correspondientes a
+los dos procesos elegidos (Sección 4).
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{diagramas/casos-uso/casos_uso_alto_nivel_proceso_a.png}
+  \caption{Diagrama de Casos de Uso de Alto Nivel --- Proceso A: Venta de Tiquetes de Pasajeros}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.95\linewidth]{diagramas/casos-uso/casos_uso_alto_nivel_proceso_c.png}
+  \caption{Diagrama de Casos de Uso de Alto Nivel --- Proceso C: Admisión y Consolidación de Mensajería}
+\end{figure}
+
+\clearpage
 % ---------------------------------------------------------------------------
 \section{Procesos Principales Elegidos}
 % ---------------------------------------------------------------------------
@@ -228,6 +266,12 @@ por las siguientes razones:
   \item \texttt{<<extend>>} \textbf{Reprogramar Tiquete Abierto} (Proceso G) --- extiende cuando existe un tiquete en estado \texttt{ABIERTO} dentro de la fecha límite.
 \end{itemize}
 
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.9\linewidth]{diagramas/casos-uso/casos_uso_extendido_cue01.png}
+  \caption{Diagrama de Caso de Uso Extendido --- CUE-01: Comprar Tiquete de Pasajero (Proceso A)}
+\end{figure}
+
 \subsection{CUE-02 --- Admitir y Consolidar Guía de Envío (Proceso C)}
 
 \begin{itemize}[nosep]
@@ -240,6 +284,13 @@ por las siguientes razones:
   \item \texttt{<<extend>>} \textbf{Marcar Guía con Novedad} --- extiende el flujo de seguimiento cuando el envío queda retenido (estado \texttt{NOVEDAD}).
 \end{itemize}
 
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.9\linewidth]{diagramas/casos-uso/casos_uso_extendido_cue02.png}
+  \caption{Diagrama de Caso de Uso Extendido --- CUE-02: Admitir y Consolidar Guía de Envío (Proceso C)}
+\end{figure}
+
+\clearpage
 % ---------------------------------------------------------------------------
 \section{Especificación de Casos de Uso}
 % ---------------------------------------------------------------------------
@@ -305,6 +356,13 @@ por las siguientes razones:
 \end{longtable}
 }
 
+\emph{Aclaración:} los hallazgos RF11 y RF17 se documentan aquí de forma \textbf{intencionalmente sin
+corregir} en este parcial --- no son un olvido. Ambos son responsabilidad del \textbf{modelo
+relacional} del CR-1 T-2 (\texttt{copetran_corregido.sql}), no del diseño de interfaz de usuario que
+exige esta consigna; corregirlos implicaría alterar el schema (agregar \texttt{id_empleado} a
+\texttt{GUIA_ENVIO} y un trigger de recálculo en \texttt{REMESA}), lo cual está fuera del alcance de
+este entregable y queda descrito como pendiente de decisión del equipo (CR-1 T-2, Sección 14.6).
+
 % ---------------------------------------------------------------------------
 \section{Diagrama de Clases DAO}
 % ---------------------------------------------------------------------------
@@ -319,7 +377,7 @@ genérica \texttt{GenericDAO<T>}.
 \begin{landscape}
 \begin{figure}[p]
   \centering
-  \includegraphics[width=\linewidth]{diagramas/clases-dao/clases_dao.png}
+  \includegraphics[width=\linewidth,height=0.92\textheight,keepaspectratio]{diagramas/clases-dao/clases_dao.png}
   \caption{Diagrama de clases DAO --- Venta de Tiquetes y Mensajería (Copetran)}
 \end{figure}
 \end{landscape}
@@ -354,6 +412,15 @@ Se modelan los tres estados/ciclos de vida más ricos del sistema, correspondien
 normalización, CR-1 T-2 Sección 14.6). Este diagrama formaliza el comportamiento real descrito en
 el Proceso B, y sirve como insumo para migrar el campo a \texttt{MULTITABLA_PARAMETRO} en una
 futura iteración.
+
+\textbf{Aporte propio de este parcial:} a diferencia de los diagramas de estados de \texttt{Tiquete}
+(\texttt{ESTADO_TIQUETE}) y \texttt{GuiaEnvio} (\texttt{ESTADO_GUIA}), que solo grafican estados que
+\textbf{ya existen} parametrizados en \texttt{MULTITABLA_PARAMETRO} del modelo relacional del CR-1
+T-2, el diagrama de \texttt{ViajeProgramado} es el \textbf{único de los tres} que formaliza un ciclo
+de vida que \textbf{todavía no está representado} en la base de datos (el campo sigue siendo texto
+libre). Es decir, este diagrama no documenta un estado existente sino que \textbf{propone} uno ---
+vale la pena mencionarlo explícitamente en la sustentación oral para que quede claro que es un
+aporte de diseño de este parcial y no una simple transcripción del modelo ya construido.
 
 \begin{figure}[h!]
   \centering
