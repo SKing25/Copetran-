@@ -15,8 +15,13 @@
 | **Postcondiciones** | Se crea un `TIQUETE` en estado `PAGADO` (o `RESERVADO`/`ABIERTO` según flujo alterno) asociado a una `FACTURA`; la silla queda ocupada para ese viaje (`UNIQUE(id_viaje, id_silla)`, RF01). |
 | **Flujo principal** | 1. Consultar disponibilidad de sillas del viaje.<br>2. Seleccionar silla y registrar/reutilizar datos del cliente.<br>3. Definir canal de venta (TAQUILLA, WEB, APP).<br>4. Bloquear la silla temporalmente (RF03, p. ej. 3 minutos) para evitar condición de carrera entre canales.<br>5. Emitir factura (cliente, cajero, método de pago).<br>6. Confirmar recepción del pago.<br>7. Confirmar tiquete como `PAGADO`. |
 | **Flujos alternativos** | **A1 (Reserva sin pago inmediato):** en el paso 6 el cliente no paga de inmediato — el tiquete queda en `RESERVADO` con `fecha_expiracion_reserva`; si vence sin pago, se libera la silla.<br>**A2 (Tiquete abierto):** en el paso 7 el cliente solicita flexibilidad de fecha — estado `ABIERTO` con `penalidad_reprogramacion`.<br>**A3 (Cancelación):** el Auxiliar de Despacho marca el tiquete como `CANCELADO` si no se usa. |
+| **Excepciones** | **#** \| **Acción** \| **Reacción**<br>1 \| El cajero digita datos del cliente incompletos o con formato inválido (ej. número de documento) \| El sistema muestra una alerta indicando los campos erróneos o faltantes y no permite continuar hasta corregirlos.<br>2 \| La silla seleccionada ya fue bloqueada o vendida por otro canal dentro del intervalo de bloqueo temporal \| El sistema muestra un mensaje de "silla no disponible" y solicita seleccionar otra.<br>3 \| El sistema de pagos no confirma la transacción dentro de los 3 minutos de bloqueo temporal (RF03) \| El sistema libera automáticamente la silla y cancela la reserva temporal. |
 | **Reglas de negocio** | RF03 (bloqueo temporal de silla, un tiquete por silla por viaje), RF04 (factura debe emitir CUFE), 5 estados y 3 canales parametrizados en `MULTITABLA_PARAMETRO`. |
 | **Frecuencia de uso** | Alta — varias veces por minuto en horas pico, por agencia. |
+| **Rendimiento** | Bloqueo de silla y confirmación de pago deben completarse en menos de 2 segundos por transacción, incluso en horas pico con múltiples cajeros concurrentes. |
+| **Importancia** | Alta — es el proceso que genera el ingreso principal de la empresa (venta de pasajes). |
+| **Urgencia** | Alta — cualquier falla bloquea la venta en taquilla y en canales digitales simultáneamente. |
+| **Comentarios** | El bloqueo temporal de silla (RF03) es crítico para evitar sobreventa entre canales TAQUILLA/WEB/APP operando en paralelo. |
 
 ## ECU-02 — Admitir y Consolidar Guía de Envío
 
@@ -30,8 +35,13 @@
 | **Postcondiciones** | Se crea una `GUIA_ENVIO` en estado `ADMITIDO`, con o sin `id_remesa` asociado; si se paga en el momento, queda asociada a una `FACTURA`. |
 | **Flujo principal** | 1. Admisión: registrar remitente, destinatario, pesaje y dimensionamiento.<br>2. Clasificar mercancía (general, perecedera, frágil, documentos/valores).<br>3. Calcular tarifa y generar guía con código de barras (estado `ADMITIDO`).<br>4. Recepción en bodega/hub, con control de capacidad/temperatura si aplica.<br>5. Consolidar en remesa si comparte remitente/destino con otras guías pendientes.<br>6. Actualizar estado a lo largo del ciclo: `EN_TRANSITO` → `BODEGA_DESTINO` → `ENTREGADO`. |
 | **Flujos alternativos** | **A1 (Pago inmediato):** en el paso 3, si el envío se paga al momento, se asocia `id_factura`.<br>**A2 (Envío sin remesa):** en el paso 5, una guía puede viajar sin consolidarse en remesa.<br>**A3 (Novedad):** en cualquier punto del paso 6, el estado puede pasar a `NOVEDAD` si el envío queda retenido. |
+| **Excepciones** | **#** \| **Acción** \| **Reacción**<br>1 \| El operario digita datos del remitente/destinatario incompletos o inválidos \| El sistema muestra una alerta y no permite generar la guía hasta corregir los datos.<br>2 \| El paquete excede el peso máximo permitido para su categoría \| El sistema rechaza la admisión y notifica que se superó el límite de peso.<br>3 \| La solicitud de CUFE a la Facturación Electrónica DIAN falla o no responde \| El sistema marca la guía con estado pendiente de facturación y notifica al operario para reintentar manualmente. |
 | **Reglas de negocio** | RF05 (cálculo automático de valor según peso/categoría, seguimiento de estado), RF11 (hallazgo: el modelo aún no registra qué empleado ejecuta la admisión — pendiente de corrección), RF17 (los totales de la remesa deben recalcularse a partir de sus guías — pendiente de trigger, ver auditoría CR-1 T-2 Sección 14.6). |
 | **Frecuencia de uso** | Alta — continua durante horario operativo, por bodega/hub. |
+| **Rendimiento** | El cálculo de tarifa (peso/categoría) y la generación de la guía con código de barras deben completarse en menos de 3 segundos por admisión. |
+| **Importancia** | Alta — es el proceso base de la línea de negocio de mensajería y encomiendas. |
+| **Urgencia** | Media — una demora afecta la operación de bodega pero no bloquea otros procesos de forma inmediata. |
+| **Comentarios** | La consolidación en remesa depende de que existan guías pendientes con mismo remitente/destino; RF11 y RF17 quedan documentados como hallazgos pendientes (ver aclaración ya existente en este documento), no se corrigen aquí. |
 
 > **Aclaración:** los hallazgos RF11 y RF17 se documentan aquí de forma **intencionalmente sin
 > corregir** en este parcial — no son un olvido. Ambos son responsabilidad del **modelo relacional**

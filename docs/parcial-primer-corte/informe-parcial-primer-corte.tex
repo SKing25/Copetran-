@@ -231,9 +231,16 @@ Unificado Racional (Kruchten, 2003; Téllez Gómez, 2026):
 A continuación, la representación gráfica UML de los casos de uso de alto nivel correspondientes a
 los dos procesos elegidos (Sección 4). Como panorama general del alcance del sistema --- con los 13
 actores internos de la Sección 2 y sus funcionalidades --- se dispone además el diagrama global
-\texttt{casos\_uso\_alto\_nivel\_global.png} en el repositorio (Sección 12), ideal para la
-sustentación, mientras que las Figuras 1 y 2 detallan los dos procesos sobre los que se
+\texttt{casos\_uso\_alto\_nivel\_global.png} a continuación (Figura~\ref{fig:casos-uso-alto-nivel-global}), ideal para la
+sustentación, mientras que las Figuras 2 y 3 detallan los dos procesos sobre los que se
 desarrollan el resto de los componentes del parcial.
+
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=0.95\linewidth,height=0.9\textheight,keepaspectratio]{diagramas/casos-uso/casos_uso_alto_nivel_global.png}
+  \caption{Diagrama de Casos de Uso de Alto Nivel --- Sistema Copetran (alcance global, 13 actores)}
+  \label{fig:casos-uso-alto-nivel-global}
+\end{figure}
 
 \begin{figure}[h!]
   \centering
@@ -353,8 +360,18 @@ por las siguientes razones:
 \textbf{A1 (Reserva sin pago inmediato):} en el paso 6 el cliente no paga de inmediato --- el tiquete queda en \texttt{RESERVADO} con \texttt{fecha_expiracion_reserva}; si vence sin pago, se libera la silla.\newline
 \textbf{A2 (Tiquete abierto):} en el paso 7 el cliente solicita flexibilidad de fecha --- estado \texttt{ABIERTO} con \texttt{penalidad_reprogramacion}.\newline
 \textbf{A3 (Cancelación):} el Auxiliar de Despacho marca el tiquete como \texttt{CANCELADO} si no se usa. \\
+\textbf{Excepciones} &
+\begin{enumerate}[nosep,leftmargin=*]
+  \item \textbf{[1]} El cajero digita datos del cliente incompletos o con formato inválido (ej.\ número de documento) $\rightarrow$ el sistema muestra una alerta indicando los campos erróneos o faltantes y no permite continuar hasta corregirlos.
+  \item \textbf{[2]} La silla seleccionada ya fue bloqueada o vendida por otro canal dentro del intervalo de bloqueo temporal $\rightarrow$ el sistema muestra un mensaje de "silla no disponible" y solicita seleccionar otra.
+  \item \textbf{[3]} El sistema de pagos no confirma la transacción dentro de los 3 minutos de bloqueo temporal (RF03) $\rightarrow$ el sistema libera automáticamente la silla y cancela la reserva temporal.
+\end{enumerate} \\
 \textbf{Reglas de negocio} & RF03 (bloqueo temporal de silla, un tiquete por silla por viaje), RF04 (factura debe emitir CUFE), 5 estados y 3 canales parametrizados en \texttt{MULTITABLA_PARAMETRO}. \\
 \textbf{Frecuencia de uso} & Alta --- varias veces por minuto en horas pico, por agencia. \\
+\textbf{Rendimiento} & Bloqueo de silla y confirmación de pago deben completarse en menos de 2 segundos por transacción, incluso en horas pico con múltiples cajeros concurrentes. \\
+\textbf{Importancia} & Alta --- es el proceso que genera el ingreso principal de la empresa (venta de pasajes). \\
+\textbf{Urgencia} & Alta --- cualquier falla bloquea la venta en taquilla y en canales digitales simultáneamente. \\
+\textbf{Comentarios} & El bloqueo temporal de silla (RF03) es crítico para evitar sobreventa entre canales TAQUILLA/WEB/APP operando en paralelo. \\
 \bottomrule
 \end{longtable}
 }
@@ -383,8 +400,18 @@ por las siguientes razones:
 \textbf{A1 (Pago inmediato):} en el paso 3, si el envío se paga al momento, se asocia \texttt{id_factura}.\newline
 \textbf{A2 (Envío sin remesa):} en el paso 5, una guía puede viajar sin consolidarse en remesa.\newline
 \textbf{A3 (Novedad):} en cualquier punto del paso 6, el estado puede pasar a \texttt{NOVEDAD} si el envío queda retenido. \\
+\textbf{Excepciones} &
+\begin{enumerate}[nosep,leftmargin=*]
+  \item \textbf{[1]} El operario digita datos del remitente/destinatario incompletos o inválidos $\rightarrow$ el sistema muestra una alerta y no permite generar la guía hasta corregir los datos.
+  \item \textbf{[2]} El paquete excede el peso máximo permitido para su categoría $\rightarrow$ el sistema rechaza la admisión y notifica que se superó el límite de peso.
+  \item \textbf{[3]} La solicitud de CUFE a la Facturación Electrónica DIAN falla o no responde $\rightarrow$ el sistema marca la guía con estado pendiente de facturación y notifica al operario para reintentar manualmente.
+\end{enumerate} \\
 \textbf{Reglas de negocio} & RF05 (cálculo automático de valor según peso/categoría, seguimiento de estado), RF11 (la admisión queda asociada al operario responsable), RF17 (los totales de la remesa se mantienen consistentes a partir de sus guías asociadas mediante \texttt{RemesaDAO.recalcularTotales()}). \\
 \textbf{Frecuencia de uso} & Alta --- continua durante horario operativo, por bodega/hub. \\
+\textbf{Rendimiento} & El cálculo de tarifa (peso/categoría) y la generación de la guía con código de barras deben completarse en menos de 3 segundos por admisión. \\
+\textbf{Importancia} & Alta --- es el proceso base de la línea de negocio de mensajería y encomiendas. \\
+\textbf{Urgencia} & Media --- una demora afecta la operación de bodega pero no bloquea otros procesos de forma inmediata. \\
+\textbf{Comentarios} & La consolidación en remesa depende de que existan guías pendientes con mismo remitente/destino; RF11 y RF17 quedan documentados como hallazgos pendientes (ver aclaración ya existente en este documento), no se corrigen aquí. \\
 \bottomrule
 \end{longtable}
 }
@@ -628,7 +655,6 @@ de despacho imprimible, con código de barras, sello de advertencia según categ
 \subsection{Matriz de verificación: documentación vs. GUI real}
 \label{sec:matriz-verificacion-gui}
 
-<<<<<<< HEAD
 Cada afirmación hecha en esta sección se contrastó directamente contra el código fuente real (no
 solo contra lo que se ve en una captura) antes de publicarse aquí. La tabla siguiente resume esa
 trazabilidad punto por punto:
@@ -650,31 +676,6 @@ Home --- portal de inicio & Buscador de pasajes y rastreo de encomiendas & \text
 \bottomrule
 \end{longtable}
 }
-=======
-\begin{itemize}
-  \item El diagrama de estados de \texttt{ViajeProgramado} formaliza un campo que hoy es texto
-  libre en la base de datos (hallazgo de normalización, CR-1 T-2 Sección 14.6) --- se documenta
-  explícitamente como aporte de este parcial.
-  \item ECU-02 hereda el hallazgo RF11 (falta \texttt{id_empleado} en \texttt{GUIA_ENVIO}) y RF17
-  (falta trigger de recálculo de totales en \texttt{REMESA}) --- el diagrama de clases DAO ya
-  incluye \texttt{recalcularTotales()} como método propuesto en \texttt{RemesaDAO}/\texttt{Remesa},
-  coherente con la corrección pendiente documentada en el CR-1 T-2.
-  \item Este documento y sus diagramas son un entregable \textbf{aparte} del CR-1 T-2
-  (\path{cr1_t2_formulacion_proyecto.tex}); no lo reemplazan ni se fusionan con ese archivo salvo
-  que el equipo decida lo contrario más adelante.
-  \item Como complemento --- fuera del alcance estricto de esta consigna --- el equipo desarrolló
-  también una interfaz de usuario funcional (React + TypeScript + Vite + TailwindCSS) en la carpeta
-  \texttt{frontend/} del repositorio, que ejecuta realmente ECU-01 y ECU-02 sobre datos de prueba en
-  memoria. Ver capturas en la Sección \ref{sec:gui-implementada}, disponible para demostración en
-  vivo durante la sustentación.
-  \item El diagrama global de casos de uso de alto nivel
-  (\path{diagramas/casos-uso/casos_uso_alto_nivel_global.png}) consolida los 13 actores de la
-  Sección 2 con sus casos de uso, como panorama general de alcance para la sustentación; las
-  Figuras 1 y 2 detallan los dos procesos elegidos.
-  \item En cumplimiento de las normas APA (7.ª edición), todas las fuentes citadas en el texto se
-  listan en la Sección de Referencias al final del documento.
-\end{itemize}
->>>>>>> 1506f86 (Refactor code structure for improved readability and maintainability)
 
 \clearpage
 % ---------------------------------------------------------------------------

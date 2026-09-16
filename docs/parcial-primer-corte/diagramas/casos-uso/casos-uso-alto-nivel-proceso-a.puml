@@ -41,11 +41,6 @@ Auxiliar -- UC9
 Auxiliar -- UC10
 Auxiliar -- UC11
 
-<<<<<<< HEAD
-UC1 -- Pagos : notifica
-UC5 -- Pagos : notifica
-@enduml
-=======
 UC1 ..> Pagos : procesa pago
 UC3 ..> Pagos : notifica
 UC4 ..> DIAN : solicita CUFE
@@ -57,4 +52,3 @@ note bottom of UC11
   taquilla de forma presencial.
 end note
 @enduml
->>>>>>> 1506f86 (Refactor code structure for improved readability and maintainability)

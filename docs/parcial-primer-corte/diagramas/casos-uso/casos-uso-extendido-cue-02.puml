@@ -29,10 +29,6 @@ rectangle "CUE-02 — Admitir y Consolidar Guía de Envío" {
 
 Operario -- Base
 Remitente -- Base
-<<<<<<< HEAD
-Base -- Facturacion : notifica
-=======
->>>>>>> 1506f86 (Refactor code structure for improved readability and maintainability)
 
 Base ..> Inc1 : <<include>>
 Base ..> Inc2 : <<include>>

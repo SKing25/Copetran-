@@ -38,10 +38,6 @@ Operario -- UC11
 Conductor -- UC10
 Conductor -- UC11
 
-<<<<<<< HEAD
-UC3 -- DIAN : notifica CUFE
-@enduml
-=======
 UC3 ..> DIAN : solicita CUFE
 UC1 ..> DIAN : notifica
 
@@ -50,4 +46,3 @@ note bottom of UC11
   Operario de Bodega y Conductor.
 end note
 @enduml
->>>>>>> 1506f86 (Refactor code structure for improved readability and maintainability)

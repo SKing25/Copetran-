@@ -29,12 +29,7 @@ rectangle "CUE-01 — Comprar Tiquete de Pasajero" {
 }
 
 Cliente -- Base
-<<<<<<< HEAD
-Auxiliar -- Base
-Base -- Pagos : notifica
-=======
 Cajero -- Base
->>>>>>> 1506f86 (Refactor code structure for improved readability and maintainability)
 
 Base ..> Inc0 : <<include>>
 Base ..> Inc1 : <<include>>
