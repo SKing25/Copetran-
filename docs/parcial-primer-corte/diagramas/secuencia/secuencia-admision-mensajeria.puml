@@ -3,40 +3,61 @@ title Diagrama de Secuencia — Proceso C: Admisión y Consolidación de Mensaje
 actor "Cliente\n(Remitente)" as Remitente
 actor "Operario de Bodega" as Operario
 participant "InterfazAdmisionGuia" as UI
+participant "ControladorAdmision" as Controlador
+participant "ClienteDAO" as ClienteDAO
 participant "GuiaEnvioDAO" as GuiaDAO
+participant "BodegaHubDAO" as BodegaDAO
 participant "RemesaDAO" as RemesaDAO
 participant "FacturaDAO" as FacturaDAO
 
-Remitente -> Operario : entregarPaquete(datos, destinatario)
-Operario -> UI : registrarAdmision(peso, dimensiones)
-activate UI
-UI -> UI : clasificarMercancia(categoria)
-UI -> GuiaDAO : calcularTarifa(peso, categoria)
+Remitente -> Operario : entregarPaquete(datosRemitente, datosDestinatario, peso, dimensiones)
+Operario -> UI : digitarAdmision(datos, pesaje, dimensiones)
+UI -> Controlador : iniciarAdmision(remitente, destinatario, peso, dimensiones)
+activate Controlador
+
+opt uno de los clientes no está registrado
+    Controlador -> ClienteDAO : verificarRegistrados(documentos)
+    activate ClienteDAO
+    ClienteDAO --> Controlador : faltaAlguno
+    deactivate ClienteDAO
+    Controlador -> ClienteDAO : insertar(clienteFaltante)
+end
+
+Controlador -> GuiaDAO : calcularTarifa(peso, categoria)
 activate GuiaDAO
-GuiaDAO --> UI : tarifaCalculada
-UI -> GuiaDAO : generarGuia(codigoBarras, "ADMITIDO")
-GuiaDAO --> UI : guiaGenerada(idGuia)
+GuiaDAO --> Controlador : tarifaCalculada
+deactivate GuiaDAO
+
+Controlador -> BodegaDAO : validarCapacidad(idBodega, pesoKg)
+activate BodegaDAO
+BodegaDAO --> Controlador : capacidadOk
+deactivate BodegaDAO
+
+Controlador -> GuiaDAO : generarGuia(codigoBarras, "ADMITIDO")
+activate GuiaDAO
+GuiaDAO --> Controlador : guiaGenerada(idGuia)
 deactivate GuiaDAO
 
 opt paga en el momento
-    UI -> FacturaDAO : asociarFactura(idGuia)
+    Controlador -> FacturaDAO : asociarFactura(idGuia)
     activate FacturaDAO
-    FacturaDAO --> UI : facturaAsociada
+    FacturaDAO --> Controlador : facturaAsociada
     deactivate FacturaDAO
 end
 
-UI -> RemesaDAO : buscarRemesaCompatible(remitente, destino)
+Controlador -> RemesaDAO : buscarRemesaCompatible(remitente, destino)
 activate RemesaDAO
-RemesaDAO --> UI : remesaEncontrada / ninguna
+RemesaDAO --> Controlador : remesaEncontrada / ninguna
 alt remesa compatible encontrada
-    UI -> GuiaDAO : consolidarEnRemesa(idGuia, idRemesa)
-    UI -> RemesaDAO : recalcularTotales(idRemesa)
-    RemesaDAO --> UI : totalesActualizados
+    Controlador -> GuiaDAO : consolidarEnRemesa(idGuia, idRemesa)
+    Controlador -> RemesaDAO : recalcularTotales(idRemesa)
+    RemesaDAO --> Controlador : totalesActualizados
 else sin remesa
-    UI -> UI : guiaViajaIndependiente()
+    Controlador -> GuiaDAO : guardarGuiaIndependiente()
 end
 deactivate RemesaDAO
 
-UI --> Operario : confirmarAdmision(numeroGuia)
-deactivate UI
+Controlador --> UI : confirmarAdmision(numeroGuia)
+UI --> Operario : mostrarConfirmacion(numeroGuia)
+deactivate Controlador
 @enduml

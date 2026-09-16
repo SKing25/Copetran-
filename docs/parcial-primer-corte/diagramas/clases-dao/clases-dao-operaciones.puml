@@ -1,0 +1,185 @@
+@startuml clases_dao_operaciones
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam nodesep 30
+skinparam ranksep 50
+title Diagrama de Clases DAO — Módulo 3, 5 y 6: Flota, Mantenimiento, Carga y Distribución (Copetran)
+
+package "Capa de Acceso a Datos (DAO)" {
+  interface GenericDAO<T> {
+    +insertar(obj: T): boolean
+    +consultarPorId(id: int): T
+    +actualizar(obj: T): boolean
+    +eliminar(id: int): boolean
+    +listarTodos(): List<T>
+  }
+
+  class ConexionBD <<Singleton>> {
+    -instancia: ConexionBD
+    -cadenaConexion: String
+    -ConexionBD()
+    +obtenerInstancia(): ConexionBD
+    +obtenerConexion(): Connection
+  }
+
+  class PropietarioDAO
+  class BusDAO {
+    +consultarDisponibles(): List<Bus>
+    +darDeAlta(bus: Bus): boolean
+  }
+  class HistorialPlacaDAO
+  class MantenimientoDAO {
+    +registrarIngreso(idBus: int, idTipo: int): boolean
+    +finalizar(idMantenimiento: int, costo: BigDecimal): boolean
+  }
+  class SillaDAO
+  class RemesaDAO {
+    +buscarCompatible(idRemitente: int, idDestinatario: int): Remesa
+    +recalcularTotales(idRemesa: int): boolean
+  }
+  class GuiaEnvioDAO {
+    +admitirGuia(datos: GuiaEnvio): GuiaEnvio
+    +actualizarEstado(idGuia: int, nuevoEstado: String): boolean
+    +consolidarEnRemesa(idGuia: int, idRemesa: int): boolean
+  }
+  class BodegaHubDAO {
+    +validarCapacidad(idBodega: int, pesoKg: BigDecimal): boolean
+  }
+  class VehiculoRepartoDAO
+
+  PropietarioDAO .up.|> GenericDAO
+  BusDAO .up.|> GenericDAO
+  HistorialPlacaDAO .up.|> GenericDAO
+  MantenimientoDAO .up.|> GenericDAO
+  SillaDAO .up.|> GenericDAO
+  RemesaDAO .up.|> GenericDAO
+  GuiaEnvioDAO .up.|> GenericDAO
+  BodegaHubDAO .up.|> GenericDAO
+  VehiculoRepartoDAO .up.|> GenericDAO
+
+  note bottom of ConexionBD
+    Misma instancia única compartida
+    con los módulos Comercial y
+    Personal/TIC (patrón Singleton).
+  end note
+}
+
+package "Capa de Entidades — MÓDULOS 3, 5 y 6 (Modelo de Dominio)" {
+  class Propietario {
+    -idPropietario: int
+    -documento: String
+    -nombreCompleto: String
+    -telefono: String
+  }
+
+  class Bus {
+    -idBus: int
+    -placa: String
+    -idPropietario: int
+    -modelo: short
+    -marca: String
+    -capacidadPasajeros: short
+    -estado: String
+    +cambiarEstado(nuevoEstado: String): void
+  }
+
+  class HistorialPlaca {
+    -idHistorialPlaca: int
+    -idBus: int
+    -placaAnterior: String
+    -placaNueva: String
+    -fechaCambio: Date
+    -motivoCambio: String
+  }
+
+  class Silla {
+    -idSilla: int
+    -idBus: int
+    -numero: short
+    -idUbicacion: int
+  }
+
+  class Mantenimiento {
+    -idMantenimiento: int
+    -idBus: int
+    -idTipoMtto: int
+    -fecha: Date
+    -costo: BigDecimal
+    -observaciones: String
+    +finalizar(): void
+  }
+
+  class Remesa {
+    -idRemesa: int
+    -numeroRemesa: String
+    -idRemitente: int
+    -idDestinatario: int
+    -fechaCreacion: DateTime
+    -descripcionCarga: String
+    -pesoTotal: BigDecimal
+    -bultosCantidad: short
+    -montoTotal: BigDecimal
+    +recalcularTotales(): void
+  }
+
+  class GuiaEnvio {
+    -idGuia: int
+    -codigoBarras: String
+    -idRemesa: int
+    -idRemitente: int
+    -idDestinatario: int
+    -idFactura: int
+    -idCategoriaMercancia: int
+    -idEstadoGuia: int
+    -pesoKg: BigDecimal
+    -valorTotal: BigDecimal
+    -fechaAdmision: DateTime
+    -documentoRecibe: String
+    -fechaEntrega: DateTime
+    +cambiarEstado(nuevoEstado: String): void
+  }
+
+  class BodegaHub {
+    -idBodega: int
+    -idAgencia: int
+    -nombre: String
+    -capacidadVolumenM3: BigDecimal
+    -temperaturaControlada: boolean
+  }
+
+  class VehiculoReparto {
+    -idVehiculo: int
+    -placa: String
+    -tipoVehiculo: String
+    -capacidadCargaKg: BigDecimal
+    -idBodegaBase: int
+    -estado: String
+  }
+
+  Propietario "1" -down- "*" Bus
+  Bus "1" -down- "*" HistorialPlaca
+  Bus "1" -down- "*" Silla
+  Bus "1" -right- "*" Mantenimiento
+  Remesa "1" -left- "*" GuiaEnvio : id_remesa (0..1)
+  BodegaHub "1" -right- "*" VehiculoReparto
+
+  note bottom of GuiaEnvio
+    Referencias cruzadas: cliente
+    remitente/destinatario y factura
+    pertenecen al MÓDULO Comercial;
+    categoría/estado vienen de
+    MULTITABLA_PARAMETRO (MÓDULO 0).
+  end note
+}
+
+PropietarioDAO -[hidden]-> Propietario
+BusDAO -[hidden]-> Bus
+HistorialPlacaDAO -[hidden]-> HistorialPlaca
+SillaDAO -[hidden]-> Silla
+MantenimientoDAO -[hidden]-> Mantenimiento
+RemesaDAO -[hidden]-> Remesa
+GuiaEnvioDAO -[hidden]-> GuiaEnvio
+BodegaHubDAO -[hidden]-> BodegaHub
+VehiculoRepartoDAO -[hidden]-> VehiculoReparto
+
+@enduml

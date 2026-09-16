@@ -1,30 +1,88 @@
 @startuml casos_uso_extendido_cue01
-title Diagrama de Caso de Uso Extendido — CUE-01: Comprar Tiquete de Pasajero (Proceso A)
-left to right direction
 skinparam packageStyle rectangle
+left to right direction
+skinparam linetype ortho
+skinparam nodesep 70
+skinparam ranksep 70
+title Diagrama de Caso de Uso Extendido — CUE-01: Comprar Tiquete de Pasajero (Proceso A)
 
+actor "Cliente" as Cliente
 actor "Cajero de\nAgencia" as Cajero
-actor Cliente
 actor "Sistema de\nPagos" as Pagos
 actor "Auxiliar de\nDespacho" as Auxiliar
+actor "Facturación Electrónica\nDIAN" as DIAN
 
-rectangle "CUE-01" {
-  usecase "Comprar Tiquete\nde Pasajero" as Base
-  usecase "Consultar Disponibilidad\nde Silla" as Inc1
-  usecase "Generar Factura" as Inc2
+rectangle "CUE-01 — Comprar Tiquete de Pasajero" {
   usecase "Reservar Tiquete Sin\nPago Inmediato" as Ext1
   usecase "Habilitar Tiquete\nAbierto" as Ext2
   usecase "Reprogramar Tiquete\nAbierto" as Ext3
+  usecase "Cancelar Tiquete" as Ext4
+
+  usecase "Comprar Tiquete\nde Pasajero" as Base
+
+  usecase "Consultar Disponibilidad\nde Viaje" as Inc0
+  usecase "Consultar Disponibilidad\nde Silla" as Inc1
+  usecase "Registrar Cliente" as Inc2
+  usecase "Bloquear Silla\nTemporalmente" as Inc3
+  usecase "Generar Factura" as Inc4
+  usecase "Confirmar Pago" as Inc5
 }
 
-Cajero -- Base
 Cliente -- Base
+<<<<<<< HEAD
 Auxiliar -- Base
 Base -- Pagos : notifica
+=======
+Cajero -- Base
+>>>>>>> 1506f86 (Refactor code structure for improved readability and maintainability)
 
+Base ..> Inc0 : <<include>>
 Base ..> Inc1 : <<include>>
 Base ..> Inc2 : <<include>>
+Base ..> Inc3 : <<include>>
+Base ..> Inc4 : <<include>>
+Base ..> Inc5 : <<include>>
+
 Ext1 ..> Base : <<extend>>
+note bottom of Ext1
+  <b>[condición]</b> el cliente no paga
+  de inmediato (se genera reserva
+  temporal con fecha de expiración)
+end note
 Ext2 ..> Base : <<extend>>
+note bottom of Ext2
+  <b>[condición]</b> pago confirmado y
+  el cliente solicita una fecha
+  de viaje flexible
+end note
 Ext3 ..> Base : <<extend>>
+note bottom of Ext3
+  <b>[condición]</b> existe un tiquete
+  ABIERTO dentro de la fecha
+  límite de reprogramación
+end note
+Ext4 ..> Base : <<extend>>
+note bottom of Ext4
+  <b>[condición]</b> el pasajero no usa el
+  tiquete en la fecha programada
+end note
+
+Cliente -- Ext1
+Cliente -- Ext2
+Cliente -- Ext3
+Cajero -- Ext3
+Auxiliar -- Ext4
+
+Base ..> Pagos : notifica
+Inc5 ..> Pagos : procesa pago
+Inc4 ..> DIAN : solicita CUFE
+
+note bottom of Base
+  <b>Reglas de negocio</b>
+  RF01: una silla por tiquete por viaje
+  (UNIQUE(id_viaje, id_silla)).
+  RF03: bloqueo temporal de silla (3 min)
+  para evitar la condición de carrera.
+  RF04: la factura debe emitir CUFE.
+end note
 @enduml

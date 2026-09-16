@@ -1,28 +1,78 @@
 @startuml casos_uso_extendido_cue02
-title Diagrama de Caso de Uso Extendido — CUE-02: Admitir y Consolidar Guía de Envío (Proceso C)
-left to right direction
 skinparam packageStyle rectangle
+left to right direction
+skinparam linetype ortho
+skinparam nodesep 70
+skinparam ranksep 70
+title Diagrama de Caso de Uso Extendido — CUE-02: Admitir y Consolidar Guía de Envío (Proceso C)
 
 actor "Operario de\nBodega" as Operario
 actor "Cliente\n(Remitente)" as Remitente
-actor "Sistema de Facturación\nElectrónica" as Facturacion
+actor "Cliente\n(Destinatario)" as Destinatario
+actor "Facturación Electrónica\nDIAN" as DIAN
+actor "Conductor de Vehículo\nde Reparto" as Conductor
 
-rectangle "CUE-02" {
-  usecase "Admitir y Consolidar\nGuía de Envío" as Base
-  usecase "Clasificar Mercancía" as Inc1
-  usecase "Calcular Tarifa\nde Envío" as Inc2
+rectangle "CUE-02 — Admitir y Consolidar Guía de Envío" {
   usecase "Asociar Guía a\nFactura Inmediata" as Ext1
-  usecase "Consolidar en Remesa" as Ext2
+  usecase "Consolidar en\nRemesa" as Ext2
   usecase "Marcar Guía\ncon Novedad" as Ext3
+  usecase "Actualizar Estado\nde Guía" as Ext4
+
+  usecase "Admitir y Consolidar\nGuía de Envío" as Base
+
+  usecase "Registrar Datos de\nRemitente y Destinatario" as Inc1
+  usecase "Registrar Pesaje y\nDimensionamiento" as Inc2
+  usecase "Clasificar Mercancía" as Inc3
+  usecase "Calcular Tarifa\nde Envío" as Inc4
+  usecase "Generar Guía con\nCódigo de Barras" as Inc5
 }
 
 Operario -- Base
 Remitente -- Base
+<<<<<<< HEAD
 Base -- Facturacion : notifica
+=======
+>>>>>>> 1506f86 (Refactor code structure for improved readability and maintainability)
 
 Base ..> Inc1 : <<include>>
 Base ..> Inc2 : <<include>>
+Base ..> Inc3 : <<include>>
+Base ..> Inc4 : <<include>>
+Base ..> Inc5 : <<include>>
+
 Ext1 ..> Base : <<extend>>
+note bottom of Ext1
+  <b>[condición]</b> el envío se paga en
+  el momento de la admisión
+end note
 Ext2 ..> Base : <<extend>>
+note bottom of Ext2
+  <b>[condición]</b> la guía comparte
+  remitente y destino con otras
+  guías pendientes
+end note
 Ext3 ..> Base : <<extend>>
+note bottom of Ext3
+  <b>[condición]</b> el envío queda
+  retenido por novedad
+end note
+Ext4 ..> Base : <<extend>>
+note bottom of Ext4
+  <b>[condición]</b> el envío avanza a
+  EN_TRANSITO / BODEGA_DESTINO
+end note
+
+Inc5 ..> DIAN : solicita CUFE
+Base ..> DIAN : notifica
+Ext4 ..> Conductor : ejecuta entrega\nen última milla
+
+note bottom of Base
+  <b>Reglas de negocio</b>
+  RF05: cálculo automático del valor según
+  peso/categoría y seguimiento de estado.
+  Categorías: GENERAL, PERECEDERA, FRÁGIL,
+  VALORES (MULTITABLA_PARAMETRO).
+  ESTADO_GUIA: ADMITIDO, EN_TRANSITO,
+  BODEGA_DESTINO, ENTREGADO, NOVEDAD.
+end note
 @enduml

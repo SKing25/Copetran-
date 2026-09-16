@@ -1,0 +1,178 @@
+@startuml clases_dao_comercial
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam nodesep 30
+skinparam ranksep 50
+title Diagrama de Clases DAO — Módulo Comercial: Ventas, Viajes, Tiquetes y Facturación (Copetran)
+
+package "Capa de Acceso a Datos (DAO)" {
+  interface GenericDAO<T> {
+    +insertar(obj: T): boolean
+    +consultarPorId(id: int): T
+    +actualizar(obj: T): boolean
+    +eliminar(id: int): boolean
+    +listarTodos(): List<T>
+  }
+
+  class ConexionBD <<Singleton>> {
+    -instancia: ConexionBD
+    -cadenaConexion: String
+    -ConexionBD()
+    +obtenerInstancia(): ConexionBD
+    +obtenerConexion(): Connection
+  }
+
+  class ParametroDAO {
+    +consultarPorConcepto(concepto: String): List<Parametro>
+  }
+
+  class ClienteDAO {
+    +consultarPorDocumento(documento: String): Cliente
+  }
+
+  class RutaDAO
+  class ItinerarioDAO
+  class ViajeProgramadoDAO {
+    +consultarDisponibilidad(origen: String, destino: String, fecha: Date): List<ViajeProgramado>
+  }
+
+  class SillaDAO {
+    +listarSillasLibres(idViaje: int): List<Silla>
+    +bloquearSillaTemporal(idSilla: int, idViaje: int): boolean
+  }
+
+  class TiqueteDAO {
+    +consultarDisponibilidadSilla(idViaje: int): List<int>
+    +reservarTiquete(idSilla: int, idViaje: int, idPasajero: int): Tiquete
+    +confirmarPago(idTiquete: int): boolean
+    +habilitarTiqueteAbierto(idTiquete: int): boolean
+    +cancelarTiquete(idTiquete: int): boolean
+  }
+
+  class FacturaDAO {
+    +generarFactura(idCliente: int, idCajero: int, idMetodoPago: int): Factura
+    +emitirCufe(idFactura: int): String
+  }
+
+  ClienteDAO .up.|> GenericDAO
+  ParametroDAO .up.|> GenericDAO
+  RutaDAO .up.|> GenericDAO
+  ItinerarioDAO .up.|> GenericDAO
+  ViajeProgramadoDAO .up.|> GenericDAO
+  SillaDAO .up.|> GenericDAO
+  TiqueteDAO .up.|> GenericDAO
+  FacturaDAO .up.|> GenericDAO
+
+  note bottom of ConexionBD
+    Patrón Singleton (GoF): todas las
+    clases *DAO de los tres módulos
+    obtienen su conexión desde esta
+    instancia única.
+  end note
+}
+
+package "Capa de Entidades — MÓDULO 0 y 4 (Modelo de Dominio)" {
+  class Parametro {
+    -idParametro: int
+    -concepto: String
+    -codigo: String
+    -descripcion: String
+    -estado: String
+  }
+
+  class Ruta {
+    -idRuta: int
+    -origenCiudad: String
+    -destinoCiudad: String
+    -distanciaKm: BigDecimal
+  }
+
+  class Itinerario {
+    -idItinerario: int
+    -idRuta: int
+    -frecuencia: String
+    -horaSalidaBase: Time
+  }
+
+  class ViajeProgramado {
+    -idViaje: int
+    -idItinerario: int
+    -idBus: int
+    -idConductor: int
+    -idConductorSecundario: int
+    -fecha: Date
+    -horaSalida: Time
+    -estadoViaje: String
+    +cambiarEstado(nuevoEstado: String): void
+  }
+
+  class Silla {
+    -idSilla: int
+    -idBus: int
+    -numero: short
+    -idUbicacion: int
+  }
+
+  class Cliente {
+    -idCliente: int
+    -documento: String
+    -nombres: String
+    -apellidos: String
+    -celular: String
+  }
+
+  class Factura {
+    -idFactura: int
+    -idCliente: int
+    -idCajero: int
+    -idMetodoPago: int
+    -fechaEmision: DateTime
+    -montoTotal: BigDecimal
+    -cufe: String
+  }
+
+  class Tiquete {
+    -idTiquete: int
+    -numeroTiquete: String
+    -idViaje: int
+    -idSilla: int
+    -idPasajero: int
+    -idFactura: int
+    -idCanalVenta: int
+    -idEstadoTiquete: int
+    -valorPagado: BigDecimal
+    -fechaExpiracionReserva: DateTime
+    -fechaLimiteAbierto: Date
+    -penalidadReprogramacion: BigDecimal
+    +cambiarEstado(nuevoEstado: String): void
+  }
+
+  Parametro "1" -left- "*" Factura : id_metodo_pago
+  Parametro "1" -left- "*" Tiquete : id_canal / id_estado
+  Ruta "1" -down- "*" Itinerario
+  Itinerario "1" -down- "*" ViajeProgramado
+  ViajeProgramado "1" -down- "*" Tiquete : id_viaje
+  Silla "1" -right- "*" Tiquete : id_silla
+  Cliente "1" -right- "*" Tiquete : id_pasajero
+  Cliente "1" -right- "*" Factura : id_cliente
+  Factura "1" -left- "*" Tiquete : id_factura
+
+  note bottom of Cliente
+    Referencia cruzada al MÓDULO 3:
+    la silla pertenece al bus (ver
+    Módulo Operaciones) y la factura
+    es emitida por un EMPLEADO cajero
+    (ver Módulo Personal y TIC).
+  end note
+}
+
+ClienteDAO -[hidden]-> Cliente
+ParametroDAO -[hidden]-> Parametro
+RutaDAO -[hidden]-> Ruta
+ItinerarioDAO -[hidden]-> Itinerario
+ViajeProgramadoDAO -[hidden]-> ViajeProgramado
+SillaDAO -[hidden]-> Silla
+TiqueteDAO -[hidden]-> Tiquete
+FacturaDAO -[hidden]-> Factura
+
+@enduml

@@ -1,23 +1,45 @@
 @startuml colaboracion_admision_mensajeria
 title Diagrama de Colaboración — Proceso C: Admisión y Consolidación de Mensajería
-skinparam nodesep 40
+skinparam nodesep 50
 skinparam ranksep 70
 left to right direction
 
-object ":ClienteRemitente" as remitente
-object ":OperarioBodega" as operario
+object ":Cliente\n(Remitente)" as remitente
+object ":Operario de\nBodega" as operario
 object ":InterfazAdmisionGuia" as ui
+object ":ControladorAdmision" as ctrl
+object ":ClienteDAO" as clienteDAO
 object ":GuiaEnvioDAO" as guiaDAO
-object ":RemesaDAO" as remesaDAO
 object ":FacturaDAO" as facturaDAO
+object ":RemesaDAO" as remesaDAO
+object ":BodegaHubDAO" as bodegaDAO
 
-remitente --> operario : 1: entregarPaquete(datosRemitente, datosDestinatario)
-operario --> ui : 2: registrarAdmision(peso, dimensiones)
-ui --> ui : 3: clasificarMercancia(categoria)
-' Un solo enlace por par de objetos, con la secuencia de mensajes
-' intercambiados en ese enlace (evita líneas redundantes y cruces).
-ui --> guiaDAO : 4: calcularTarifa(peso, categoria)\n5: tarifaCalculada\n6: generarGuia(codigoBarras, "ADMITIDO")\n10: consolidarEnRemesa(idGuia, idRemesa) [si aplica]
-ui --> facturaDAO : 7: asociarFactura(idGuia) [si paga de inmediato]
-ui --> remesaDAO : 8: buscarRemesaCompatible(remitente, destino)\n9: remesaEncontrada / ninguna
-ui --> operario : 11: confirmarAdmision(numeroGuia)
+remitente --> operario : 1: entregarPaquete(datosRemitente, datosDestinatario, peso, dimensiones)
+operario --> ui : 2: digitarAdmision(peso, dimensiones, categorias)
+ui --> ctrl : 3: iniciarAdmision(datosRemitente, datosDestinatario, peso, dimensiones)
+ctrl --> clienteDAO : 3.1: verificarRegistrados(documentos)
+clienteDAO --> ctrl : 3.2: estadoRegistro
+ctrl --> clienteDAO : 3.3: insertar(cliente) [si falta alguno]
+ctrl --> guiaDAO : 4: calcularTarifa(peso, categoria)
+guiaDAO --> ctrl : 4.1: tarifaCalculada
+ctrl --> bodegaDAO : 4.2: validarCapacidad(idBodega, pesoKg)
+bodegaDAO --> ctrl : 4.3: capacidadOk
+ctrl --> guiaDAO : 4.4: generarGuia(codigoBarras, "ADMITIDO")
+guiaDAO --> ctrl : 4.5: guiaGenerada(idGuia)
+ctrl --> facturaDAO : 5: asociarFactura(idGuia) [si paga de inmediato]
+facturaDAO --> ctrl : 5.1: facturaAsociada
+ctrl --> remesaDAO : 6: buscarRemesaCompatible(remitente, destino)
+remesaDAO --> ctrl : 6.1: remesaEncontrada / ninguna
+ctrl --> guiaDAO : 6.2: consolidarEnRemesa(idGuia, idRemesa) [si aplica]
+ctrl --> remesaDAO : 6.3: recalcularTotales(idRemesa)
+remesaDAO --> ctrl : 6.4: totalesActualizados
+ctrl --> ui : 7: confirmarAdmision(numeroGuia)
+ui --> operario : 7.1: mostrarConfirmacion(numeroGuia)
+
+note bottom of ctrl
+  Controlador que aplica RF05
+  (cálculo automático de valor según
+  peso/categoría) y las reglas de
+  consolidación de remesas.
+end note
 @enduml

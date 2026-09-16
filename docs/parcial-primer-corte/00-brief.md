@@ -174,173 +174,31 @@ Justificación (para que quede explícita en el documento entregable):
 
 ## 6. Diagrama de clases DAO
 
-Archivo: `docs/parcial-primer-corte/diagramas/clases-dao/clases-dao.puml`
+Para garantizar trazabilidad total con `copetran_corregido.sql` (28 tablas), el diagrama de
+clases DAO se organizó en **tres diagramas por módulo**, cada uno con dos capas --- Capa de Acceso
+a Datos (DAO) y Capa de Entidades (Modelo de Dominio):
 
-```plantuml
-@startuml clases_dao
-title Diagrama de Clases DAO — Venta de Tiquetes y Mensajería (Copetran)
-skinparam classAttributeIconSize 0
+- **Módulo Comercial** (ventas, viajes, tiquetes y facturación): `Cliente`, `Factura`, `Tiquete`,
+  `ViajeProgramado`, `Silla`, `Ruta`, `Itinerario` y `Parametro`.
+  `docs/parcial-primer-corte/diagramas/clases-dao/clases-dao-comercial.puml`
+- **Módulo de Operaciones** (flota, mantenimiento, carga y distribución): `Propietario`, `Bus`,
+  `HistorialPlaca`, `Silla`, `Mantenimiento`, `Remesa`, `GuiaEnvio`, `BodegaHub` y
+  `VehiculoReparto`.
+  `docs/parcial-primer-corte/diagramas/clases-dao/clases-dao-operaciones.puml`
+- **Módulo Personal, Nómina y TIC**: `Agencia`, `Departamento`, `Empleado`, `Cargo`, `Contrato`,
+  `LicenciaConduccion`, `Nomina`, `NominaDevengado`, `NominaDeducido`, `Novedad`,
+  `DispositivoIoT` e `IncidenciaTIC`.
+  `docs/parcial-primer-corte/diagramas/clases-dao/clases-dao-personal.puml`
 
-interface GenericDAO<T> {
-  +insertar(obj: T): boolean
-  +consultarPorId(id: int): T
-  +actualizar(obj: T): boolean
-  +eliminar(id: int): boolean
-  +listarTodos(): List<T>
-}
+`GenericDAO<T>` es la interfaz genérica de persistencia y `ConexionBD` implementa el patrón
+Singleton (Gamma, Helm, Johnson y Vlissides, 1994) como única fuente de conexión para todas las
+clases DAO.
 
-class ConexionBD <<Singleton>> {
-  -instancia: ConexionBD
-  -cadenaConexion: String
-  -ConexionBD()
-  +obtenerInstancia(): ConexionBD
-  +obtenerConexion(): Connection
-  +cerrarConexion(): void
-}
+![Diagrama de clases DAO — Módulo Comercial](diagramas/clases-dao/clases_dao_comercial.png)
 
-class Cliente {
-  -idCliente: int
-  -documento: String
-  -nombres: String
-  -apellidos: String
-  -celular: String
-}
+![Diagrama de clases DAO — Módulo de Operaciones](diagramas/clases-dao/clases_dao_operaciones.png)
 
-class Empleado {
-  -idEmpleado: int
-  -cedula: String
-  -nombres: String
-  -apellidos: String
-  -idAgencia: int
-}
-
-class Parametro {
-  -idParametro: int
-  -concepto: String
-  -codigo: String
-  -descripcion: String
-}
-
-class ViajeProgramado {
-  -idViaje: int
-  -idItinerario: int
-  -idBus: int
-  -idConductor: int
-  -fecha: Date
-  -horaSalida: Time
-  -estadoViaje: String
-}
-
-class Factura {
-  -idFactura: int
-  -idCliente: int
-  -idCajero: int
-  -idMetodoPago: int
-  -fechaEmision: DateTime
-  -montoTotal: BigDecimal
-  -cufe: String
-}
-
-class Tiquete {
-  -idTiquete: int
-  -numeroTiquete: String
-  -idViaje: int
-  -idSilla: int
-  -idPasajero: int
-  -idFactura: int
-  -idCanalVenta: int
-  -idEstadoTiquete: int
-  -valorPagado: BigDecimal
-  -fechaExpiracionReserva: DateTime
-  -penalidadReprogramacion: BigDecimal
-  +cambiarEstado(nuevoEstado: String): void
-}
-
-class Remesa {
-  -idRemesa: int
-  -numeroRemesa: String
-  -idRemitente: int
-  -idDestinatario: int
-  -pesoTotal: BigDecimal
-  -montoTotal: BigDecimal
-  -bultosCantidad: int
-  +recalcularTotales(): void
-}
-
-class GuiaEnvio {
-  -idGuia: int
-  -codigoBarras: String
-  -idRemesa: int
-  -idRemitente: int
-  -idDestinatario: int
-  -idFactura: int
-  -idCategoriaMercancia: int
-  -idEstadoGuia: int
-  -pesoKg: BigDecimal
-  -valorTotal: BigDecimal
-  +cambiarEstado(nuevoEstado: String): void
-}
-
-class TiqueteDAO {
-  +consultarDisponibilidadSilla(idViaje: int): List<int>
-  +bloquearSillaTemporal(idSilla: int, idViaje: int): boolean
-  +confirmarPago(idTiquete: int): boolean
-}
-class FacturaDAO
-class ViajeProgramadoDAO
-class ClienteDAO
-class EmpleadoDAO
-class ParametroDAO
-class GuiaEnvioDAO {
-  +consolidarEnRemesa(idGuia: int, idRemesa: int): boolean
-  +actualizarEstado(idGuia: int, nuevoEstado: String): boolean
-}
-class RemesaDAO {
-  +recalcularTotales(idRemesa: int): boolean
-}
-
-GenericDAO <|.. TiqueteDAO
-GenericDAO <|.. FacturaDAO
-GenericDAO <|.. ViajeProgramadoDAO
-GenericDAO <|.. ClienteDAO
-GenericDAO <|.. EmpleadoDAO
-GenericDAO <|.. ParametroDAO
-GenericDAO <|.. GuiaEnvioDAO
-GenericDAO <|.. RemesaDAO
-
-TiqueteDAO ..> ConexionBD
-FacturaDAO ..> ConexionBD
-ViajeProgramadoDAO ..> ConexionBD
-ClienteDAO ..> ConexionBD
-EmpleadoDAO ..> ConexionBD
-ParametroDAO ..> ConexionBD
-GuiaEnvioDAO ..> ConexionBD
-RemesaDAO ..> ConexionBD
-
-TiqueteDAO ..> Tiquete
-FacturaDAO ..> Factura
-ViajeProgramadoDAO ..> ViajeProgramado
-ClienteDAO ..> Cliente
-EmpleadoDAO ..> Empleado
-ParametroDAO ..> Parametro
-GuiaEnvioDAO ..> GuiaEnvio
-RemesaDAO ..> Remesa
-
-Tiquete "*" --> "1" ViajeProgramado
-Tiquete "1" --> "1" Factura
-Tiquete "*" --> "1" Cliente : id_pasajero
-Factura "*" --> "1" Cliente : id_cliente
-Factura "*" --> "1" Empleado : id_cajero
-GuiaEnvio "*" --> "0..1" Remesa
-GuiaEnvio "*" --> "1" Cliente : id_remitente
-GuiaEnvio "*" --> "1" Cliente : id_destinatario
-GuiaEnvio "*" --> "0..1" Factura
-Remesa "*" --> "1" Cliente : id_remitente
-Remesa "*" --> "1" Cliente : id_destinatario
-@enduml
-```
-
----
+![Diagrama de clases DAO — Módulo Personal, Nómina y TIC](diagramas/clases-dao/clases_dao_personal.png)
 
 ## 7. Diagramas de estados (tres clases principales)
 

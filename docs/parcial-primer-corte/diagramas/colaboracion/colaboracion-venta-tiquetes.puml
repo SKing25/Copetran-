@@ -1,24 +1,49 @@
 @startuml colaboracion_venta_tiquetes
 title Diagrama de Colaboración — Proceso A: Venta de Tiquetes
+skinparam nodesep 50
+skinparam ranksep 70
 left to right direction
 
 object ":Cliente" as cliente
+object ":Cajero de Agencia" as cajero
 object ":InterfazVenta" as ui
+object ":ControladorVenta" as ctrl
+object ":ClienteDAO" as clienteDAO
 object ":ViajeProgramadoDAO" as viajeDAO
+object ":SillaDAO" as sillaDAO
 object ":TiqueteDAO" as tiqueteDAO
 object ":FacturaDAO" as facturaDAO
 object ":SistemaPagos" as pagos
 
-cliente --> ui : 1: solicitarCompra(idViaje)
-ui --> viajeDAO : 2: consultarDisponibilidad(idViaje)
-viajeDAO --> ui : 3: sillasDisponibles
-ui --> cliente : 4: mostrarSillas(sillasDisponibles)
-cliente --> ui : 5: seleccionarSilla(idSilla)
-ui --> tiqueteDAO : 6: bloquearSillaTemporal(idSilla, idViaje)
-ui --> facturaDAO : 7: generarFactura(idCliente, metodoPago)
-ui --> pagos : 8: procesarPago(monto)
-pagos --> ui : 9: confirmacionPago
-ui --> tiqueteDAO : 10: confirmarTiquete(idTiquete, "PAGADO")
-tiqueteDAO --> ui : 11: tiqueteConfirmado
-ui --> cliente : 12: entregarTiquete(numeroTiquete)
+cliente --> cajero : 1: solicitarVenta(idViaje, datosCliente)
+cajero --> ui : 2: digitarDatosVenta(datosCliente)
+ui --> ctrl : 3: iniciarVenta(datosCliente, idViaje)
+ctrl --> clienteDAO : 3.1: consultarPorDocumento(documento)
+clienteDAO --> ctrl : 3.2: existe / no existe
+ctrl --> clienteDAO : 3.3: insertar(cliente) [si no existe]
+ctrl --> viajeDAO : 4: consultarDisponibilidad(idViaje)
+viajeDAO --> ctrl : 4.1: viajesDisponibles
+ctrl --> ui : 5: mostrarViajes(viajes)
+ui --> cajero : 5.1: seleccionarViajeYAsiento(idViaje, idSilla)
+cajero --> ui : 6: confirmarSeleccion(idSilla)
+ui --> ctrl : 6.1: seleccionarSilla(idSilla)
+ctrl --> sillaDAO : 6.2: bloquearSillaTemporal(idSilla, idViaje)
+sillaDAO --> ctrl : 6.3: sillaBloqueada
+ctrl --> facturaDAO : 7: generarFactura(idCliente, idCajero, idMetodoPago)
+facturaDAO --> ctrl : 7.1: facturaGenerada(idFactura)
+ctrl --> pagos : 8: procesarPago(monto)
+pagos --> ctrl : 8.1: confirmacionPago
+ctrl --> facturaDAO : 8.2: emitirCufe(idFactura)
+facturaDAO --> ctrl : 8.3: cufe
+ctrl --> tiqueteDAO : 9: confirmarTiquete(idTiquete, "PAGADO")
+tiqueteDAO --> ctrl : 9.1: tiqueteConfirmado
+ctrl --> ui : 10: mostrarTiquete(numeroTiquete)
+ui --> cliente : 10.1: entregarTiquete(numeroTiquete)
+
+note bottom of ctrl
+  El Controlador centraliza las reglas
+  RF01 (una silla por tiquete por viaje),
+  RF03 (bloqueo temporal 3 min) y RF04
+  (emisión de CUFE) antes de persistir.
+end note
 @enduml

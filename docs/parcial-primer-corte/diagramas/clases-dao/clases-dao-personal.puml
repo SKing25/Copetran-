@@ -1,0 +1,214 @@
+@startuml clases_dao_personal
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam nodesep 30
+skinparam ranksep 50
+title Diagrama de Clases DAO — Módulo 1, 2 y 7: Personal, Nómina, Agencias y TIC (Copetran)
+
+package "Capa de Acceso a Datos (DAO)" {
+  interface GenericDAO<T> {
+    +insertar(obj: T): boolean
+    +consultarPorId(id: int): T
+    +actualizar(obj: T): boolean
+    +eliminar(id: int): boolean
+    +listarTodos(): List<T>
+  }
+
+  class ConexionBD <<Singleton>> {
+    -instancia: ConexionBD
+    -cadenaConexion: String
+    -ConexionBD()
+    +obtenerInstancia(): ConexionBD
+    +obtenerConexion(): Connection
+  }
+
+  class AgenciaDAO
+  class DepartamentoDAO
+  class EmpleadoDAO {
+    +consultarConductores(): List<Empleado>
+  }
+  class CargoDAO
+  class ContratoDAO
+  class LicenciaConduccionDAO {
+    +validarVigencia(idEmpleado: int): boolean
+  }
+  class NominaDAO {
+    +liquidarPeriodo(idContrato: int, periodo: String): Nomina
+  }
+  class NominaDevengadoDAO
+  class NominaDeducidoDAO
+  class NovedadDAO {
+    +registrarNovedad(novedad: Novedad): boolean
+  }
+  class DispositivoIoTDAO {
+    +consultarEstado(idBus: int): List<DispositivoIoT>
+  }
+  class IncidenciaTICDAO {
+    +cerrarIncidencia(idIncidencia: int): boolean
+  }
+
+  AgenciaDAO .up.|> GenericDAO
+  DepartamentoDAO .up.|> GenericDAO
+  EmpleadoDAO .up.|> GenericDAO
+  CargoDAO .up.|> GenericDAO
+  ContratoDAO .up.|> GenericDAO
+  LicenciaConduccionDAO .up.|> GenericDAO
+  NominaDAO .up.|> GenericDAO
+  NominaDevengadoDAO .up.|> GenericDAO
+  NominaDeducidoDAO .up.|> GenericDAO
+  NovedadDAO .up.|> GenericDAO
+  DispositivoIoTDAO .up.|> GenericDAO
+  IncidenciaTICDAO .up.|> GenericDAO
+
+  note bottom of ConexionBD
+    Misma instancia única compartida
+    con los demás módulos (Singleton).
+  end note
+}
+
+package "Capa de Entidades — MÓDULOS 1, 2 y 7 (Modelo de Dominio)" {
+  class Agencia {
+    -idAgencia: int
+    -nombre: String
+    -ciudad: String
+    -direccion: String
+    -telefono: String
+  }
+
+  class Departamento {
+    -idDepartamento: int
+    -nombreArea: String
+    -idJefe: int
+    -presupuestoAnual: BigDecimal
+  }
+
+  class Empleado {
+    -idEmpleado: int
+    -cedula: String
+    -nombres: String
+    -apellidos: String
+    -telefono: String
+    -correo: String
+    -idAgencia: int
+    +esConductorConLicenciaVigente(): boolean
+  }
+
+  class Cargo {
+    -idCargo: int
+    -nombre: String
+    -nivelJerarquico: int
+    -idDepartamento: int
+  }
+
+  class Contrato {
+    -idContrato: int
+    -idEmpleado: int
+    -idCargo: int
+    -idTipoContrato: int
+    -fechaInicio: Date
+    -fechaFin: Date
+    -salarioBase: BigDecimal
+    -jornada: String
+    -estado: String
+  }
+
+  class LicenciaConduccion {
+    -idLicencia: int
+    -idEmpleado: int
+    -numeroLicencia: String
+    -categoria: String
+    -fechaExpedicion: Date
+    -fechaVencimiento: Date
+  }
+
+  class Nomina {
+    -idNomina: int
+    -idContrato: int
+    -periodo: String
+    -fechaPago: Date
+    -totalDevengado: BigDecimal
+    -totalDeducido: BigDecimal
+    -netoPagar: BigDecimal
+    +recalcularTotales(): void
+  }
+
+  class NominaDevengado {
+    -idDevengado: int
+    -idNomina: int
+    -concepto: String
+    -porcentaje: BigDecimal
+    -valor: BigDecimal
+  }
+
+  class NominaDeducido {
+    -idDeducido: int
+    -idNomina: int
+    -concepto: String
+    -porcentaje: BigDecimal
+    -valor: BigDecimal
+  }
+
+  class Novedad {
+    -idNovedad: int
+    -idContrato: int
+    -idTipoNovedad: int
+    -fecha: Date
+    -valor: BigDecimal
+    -descripcion: String
+  }
+
+  class DispositivoIoT {
+    -idDispositivo: int
+    -idBus: int
+    -tipoDispositivo: String
+    -macAddress: String
+    -ipAsignada: String
+    -estadoRed: String
+  }
+
+  class IncidenciaTIC {
+    -idIncidencia: int
+    -idEmpleadoReporta: int
+    -idTecnicoAsignado: int
+    -tipoIncidencia: String
+    -descripcion: String
+    -fechaReporte: DateTime
+    -fechaCierre: DateTime
+    -estado: String
+  }
+
+  Agencia "1" -down- "*" Empleado : id_agencia
+  Departamento "0..1" -up- "1" Empleado : id_jefe
+  Departamento "1" -down- "*" Cargo
+  Empleado "1" -right- "*" Contrato
+  Empleado "1" -down- "*" LicenciaConduccion
+  Empleado "1" -down- "*" IncidenciaTIC : reporta / asigna
+  Cargo "1" -down- "*" Contrato
+  Contrato "1" -down- "*" Nomina
+  Contrato "1" -right- "*" Novedad
+  Nomina "1" -down- "*" NominaDevengado
+  Nomina "1" -down- "*" NominaDeducido
+
+  note bottom of IncidenciaTIC
+    Referencia cruzada: DispositivoIoT
+    se asocia a BUS del MÓDULO
+    Operaciones; los tipos de
+    contrato/novedad vienen de
+    MULTITABLA_PARAMETRO (MÓDULO 0).
+  end note
+}
+
+AgenciaDAO -[hidden]-> Agencia
+DepartamentoDAO -[hidden]-> Departamento
+EmpleadoDAO -[hidden]-> Empleado
+CargoDAO -[hidden]-> Cargo
+ContratoDAO -[hidden]-> Contrato
+LicenciaConduccionDAO -[hidden]-> LicenciaConduccion
+NominaDAO -[hidden]-> Nomina
+NominaDevengadoDAO -[hidden]-> NominaDevengado
+NominaDeducidoDAO -[hidden]-> NominaDeducido
+NovedadDAO -[hidden]-> Novedad
+DispositivoIoTDAO -[hidden]-> DispositivoIoT
+IncidenciaTICDAO -[hidden]-> IncidenciaTIC
+
+@enduml

@@ -1,40 +1,77 @@
 @startuml secuencia_venta_tiquetes
 title Diagrama de Secuencia — Proceso A: Venta de Tiquetes
 actor Cliente
+actor "Cajero de Agencia" as Cajero
 participant "InterfazVenta" as UI
+participant "ControladorVenta" as Controlador
+participant "ClienteDAO" as ClienteDAO
 participant "ViajeProgramadoDAO" as ViajeDAO
-participant "TiqueteDAO" as TiqueteDAO
+participant "SillaDAO" as SillaDAO
 participant "FacturaDAO" as FacturaDAO
+participant "TiqueteDAO" as TiqueteDAO
 participant "SistemaPagos" as Pagos
 
-Cliente -> UI : solicitarCompra(idViaje)
-activate UI
-UI -> ViajeDAO : consultarDisponibilidad(idViaje)
-activate ViajeDAO
-ViajeDAO --> UI : sillasDisponibles
-deactivate ViajeDAO
-UI --> Cliente : mostrarSillas(sillasDisponibles)
-Cliente -> UI : seleccionarSilla(idSilla)
-UI -> TiqueteDAO : bloquearSillaTemporal(idSilla, idViaje)
-activate TiqueteDAO
-TiqueteDAO --> UI : sillaBloqueada
-deactivate TiqueteDAO
-UI -> FacturaDAO : generarFactura(idCliente, metodoPago)
-activate FacturaDAO
-FacturaDAO --> UI : facturaGenerada(cufe)
-deactivate FacturaDAO
-UI -> Pagos : procesarPago(monto)
-activate Pagos
-Pagos --> UI : confirmacionPago
-deactivate Pagos
+Cliente -> Cajero : solicitarVenta(datosCliente, idViaje)
+Cajero -> UI : digitarDatosVenta(datosCliente)
+UI -> Controlador : iniciarVenta(datosCliente, idViaje)
+activate Controlador
 
+alt cliente no registrado
+    Controlador -> ClienteDAO : consultarPorDocumento(documento)
+    activate ClienteDAO
+    ClienteDAO --> Controlador : no existe
+    deactivate ClienteDAO
+    Controlador -> ClienteDAO : insertar(cliente)
+else
+    Controlador -> ClienteDAO : consultarPorDocumento(documento)
+    activate ClienteDAO
+    ClienteDAO --> Controlador : clienteExistente
+    deactivate ClienteDAO
+end
+
+Controlador -> ViajeDAO : consultarDisponibilidad(idViaje)
+activate ViajeDAO
+ViajeDAO --> Controlador : viajesDisponibles
+deactivate ViajeDAO
+
+Controlador --> UI : mostrarViajesYAsientos(viajes, sillas)
+UI --> Cajero : sillasDisponibles
+Cajero -> UI : seleccionarSilla(idSilla)
+UI -> Controlador : reservarSilla(idSilla, idViaje)
+Controlador -> SillaDAO : bloquearSillaTemporal(idSilla, idViaje)
+activate SillaDAO
+SillaDAO --> Controlador : sillaBloqueada
+deactivate SillaDAO
+
+Controlador -> FacturaDAO : generarFactura(idCliente, idCajero, idMetodoPago)
+activate FacturaDAO
+FacturaDAO --> Controlador : facturaGenerada(idFactura)
+deactivate FacturaDAO
+
+Controlador -> Pagos : procesarPago(monto)
+activate Pagos
 alt pago confirmado
-    UI -> TiqueteDAO : confirmarTiquete(idTiquete, "PAGADO")
-    TiqueteDAO --> UI : tiqueteConfirmado
+    Pagos --> Controlador : confirmacionPago
+    deactivate Pagos
+    Controlador -> FacturaDAO : emitirCufe(idFactura)
+    activate FacturaDAO
+    FacturaDAO --> Controlador : cufe
+    deactivate FacturaDAO
+    Controlador -> TiqueteDAO : confirmarTiquete(idTiquete, "PAGADO")
+    activate TiqueteDAO
+    TiqueteDAO --> Controlador : tiqueteConfirmado
+    deactivate TiqueteDAO
+    Controlador --> UI : ventaCompletada(numeroTiquete)
     UI --> Cliente : entregarTiquete(numeroTiquete)
 else pago no confirmado a tiempo
-    UI -> TiqueteDAO : marcarEstado(idTiquete, "RESERVADO")
-    UI --> Cliente : notificarReservaTemporal(fechaExpiracion)
+    Pagos --> Controlador : sinPago
+    deactivate Pagos
+    Controlador -> TiqueteDAO : marcarEstado(idTiquete, "RESERVADO")
+    activate TiqueteDAO
+    TiqueteDAO --> Controlador : reservado
+    deactivate TiqueteDAO
+    Controlador --> UI : notificarReserva(fechaExpiracionReserva)
+    UI --> Cliente : mostrarReservaTemporal()
 end
-deactivate UI
+deactivate Controlador
 @enduml

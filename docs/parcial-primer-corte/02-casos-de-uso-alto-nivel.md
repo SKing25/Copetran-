@@ -24,7 +24,12 @@
 ## Diagramas gráficos (por proceso elegido)
 
 Representación gráfica UML de los casos de uso de alto nivel correspondientes a los dos procesos
-elegidos en [03-procesos-principales.md](03-procesos-principales.md).
+elegidos en [03-procesos-principales.md](03-procesos-principales.md), así como el panorama global
+con los 13 actores y sus funcionalidades.
+
+### Panorama global del sistema
+
+![Diagrama de Casos de Uso de Alto Nivel — Panorama global (13 actores)](diagramas/casos-uso/casos_uso_alto_nivel_global.png)
 
 ### Proceso A — Venta de Tiquetes de Pasajeros
 
