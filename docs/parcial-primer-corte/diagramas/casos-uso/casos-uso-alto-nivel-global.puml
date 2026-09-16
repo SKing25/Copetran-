@@ -1,6 +1,9 @@
 @startuml casos_uso_alto_nivel_global
 skinparam packageStyle rectangle
 left to right direction
+skinparam linetype ortho
+skinparam nodesep 25
+skinparam ranksep 60
 title Diagrama de Casos de Uso de Alto Nivel — Sistema de Información Copetran (alcance global)
 
 actor "Cliente\n(Pasajero / Remitente / Destinatario)" as Cliente
@@ -17,8 +20,6 @@ actor "Técnico de\nIncidencias" as Incidencias
 actor "Administrador\nde Servidores" as Servidores
 actor "Gerencia\nGeneral" as Gerencia
 actor "Auditoría\nInterna" as Auditoria
-actor "Sistema de\nPagos" as Pagos
-actor "Facturación Electrónica\nDIAN" as DIAN
 
 rectangle "D.1 — Comercial y Taquillas" as D1 {
   usecase "Vender Tiquete" as CU1
@@ -114,25 +115,7 @@ Gerencia -- CU28
 Gerencia -- CU29
 Auditoria -- CU37
 Auditoria -- CU38
-
-Cajero -- CU36
-Auxiliar -- CU36
-Operario -- CU36
-Conductor -- CU36
-RRHH -- CU36
-Nomina -- CU36
-Mecanico -- CU36
-Inspector -- CU36
-Monitorista -- CU36
-Incidencias -- CU36
-Servidores -- CU36
-Gerencia -- CU36
 Auditoria -- CU36
-
-CU1 ..> Pagos : notifica
-CU5 ..> Pagos : procesa pago
-CU2 ..> DIAN : solicita CUFE
-CU11 ..> DIAN : solicita CUFE
 
 D1 -[hidden]right-> D2
 D2 -[hidden]right-> D3
@@ -140,11 +123,14 @@ D4 -[hidden]right-> D5
 D5 -[hidden]right-> T
 D1 -[hidden]down-> D4
 D2 -[hidden]down-> D5
+D3 -[hidden]down-> T
 
 note bottom of CU36
-  RNF01: control de acceso por cargo
-  (autenticación previa para los 13 roles
-  internos; Cliente queda excluido por
-  atender en taquilla vía Cajero).
+  RNF01: control de acceso por cargo. Los 13 roles
+  internos (uno por cada actor de este diagrama,
+  salvo Cliente) requieren autenticación previa;
+  Cliente queda excluido por atender en taquilla
+  vía Cajero. Detalle de interacción con Sistema de
+  Pagos y Facturación DIAN: ver Figuras 2 y 3.
 end note
 @enduml
