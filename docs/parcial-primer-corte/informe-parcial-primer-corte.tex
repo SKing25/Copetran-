@@ -502,6 +502,8 @@ PlantUML no tiene un tipo nativo ``diagrama de comunicación/colaboración''; se
 diagrama de objetos con mensajes numerados sobre los enlaces (técnica estándar UML2 para
 aproximar un diagrama de colaboración; Object Management Group, 2017).
 
+En ambos procesos, la interfaz de usuario (\texttt{InterfazVenta} / \texttt{InterfazAdmisionGuia}) nunca invoca directamente a un DAO: todo mensaje pasa primero por el Controlador (\texttt{ControladorVenta} / \texttt{ControladorAdmision}), que centraliza las reglas de negocio (bloqueo temporal de silla, cálculo de tarifa, consolidación en remesa) antes de delegar la persistencia. Este mediador es el mismo objeto que aparece en el Diagrama de Clases DAO (Sección~7) como capa de Control, y evita que el actor humano (Cliente/Cajero, Remitente/Operario de Bodega) tenga visibilidad directa de la capa de acceso a datos.
+
 \subsection{Proceso A --- Venta de Tiquetes}
 
 \begin{figure}[h!]
@@ -522,6 +524,8 @@ aproximar un diagrama de colaboración; Object Management Group, 2017).
 % ---------------------------------------------------------------------------
 \section{Diagramas de Secuencia}
 % ---------------------------------------------------------------------------
+
+Los diagramas de secuencia siguientes detallan temporalmente la misma arquitectura de tres capas (interfaz $\rightarrow$ controlador $\rightarrow$ DAO) que los diagramas de colaboración de la Sección~9: cada actor humano interactúa únicamente con la interfaz correspondiente, que delega en el Controlador, y este es el único objeto con líneas de vida hacia los distintos \texttt{*DAO}. Los fragmentos \texttt{alt}/\texttt{opt} reflejan los flujos alternativos documentados en ECU-01 y ECU-02 (Sección~6): el Proceso A muestra el bloque \texttt{alt} [pago confirmado] / [pago no confirmado a tiempo] (RF03), y el Proceso C muestra dos bloques \texttt{opt} (cliente no registrado; pago en el momento) además del bloque \texttt{alt} [remesa compatible encontrada] / [sin remesa] (RF05).
 
 \subsection{Proceso A --- Venta de Tiquetes}
 
