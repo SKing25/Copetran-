@@ -30,9 +30,12 @@ Docente: José Marcial Téllez Gómez
 **Diagramas** (`docs/parcial-primer-corte/diagramas/`):
 
 - Diagramas de casos de uso:
-  - Alto nivel — [Proceso A](docs/parcial-primer-corte/diagramas/casos-uso/casos-uso-alto-nivel-proceso-a.puml) ([PNG](docs/parcial-primer-corte/diagramas/casos-uso/casos_uso_alto_nivel_proceso_a.png)) / [Proceso C](docs/parcial-primer-corte/diagramas/casos-uso/casos-uso-alto-nivel-proceso-c.puml) ([PNG](docs/parcial-primer-corte/diagramas/casos-uso/casos_uso_alto_nivel_proceso_c.png))
+  - Alto nivel — [Panorama global](docs/parcial-primer-corte/diagramas/casos-uso/casos-uso-alto-nivel-global.puml) ([PNG](docs/parcial-primer-corte/diagramas/casos-uso/casos_uso_alto_nivel_global.png)) / [Proceso A](docs/parcial-primer-corte/diagramas/casos-uso/casos-uso-alto-nivel-proceso-a.puml) ([PNG](docs/parcial-primer-corte/diagramas/casos-uso/casos_uso_alto_nivel_proceso_a.png)) / [Proceso C](docs/parcial-primer-corte/diagramas/casos-uso/casos-uso-alto-nivel-proceso-c.puml) ([PNG](docs/parcial-primer-corte/diagramas/casos-uso/casos_uso_alto_nivel_proceso_c.png))
   - Extendido — [CUE-01](docs/parcial-primer-corte/diagramas/casos-uso/casos-uso-extendido-cue-01.puml) ([PNG](docs/parcial-primer-corte/diagramas/casos-uso/casos_uso_extendido_cue01.png)) / [CUE-02](docs/parcial-primer-corte/diagramas/casos-uso/casos-uso-extendido-cue-02.puml) ([PNG](docs/parcial-primer-corte/diagramas/casos-uso/casos_uso_extendido_cue02.png))
-- [Diagrama de clases DAO](docs/parcial-primer-corte/diagramas/clases-dao/clases-dao.puml) ([PNG](docs/parcial-primer-corte/diagramas/clases-dao/clases_dao.png))
+- Diagramas de clases DAO (3 módulos, cubren las 28 tablas de `copetran_corregido.sql`):
+  - [Módulo Comercial](docs/parcial-primer-corte/diagramas/clases-dao/clases-dao-comercial.puml) ([PNG](docs/parcial-primer-corte/diagramas/clases-dao/clases_dao_comercial.png))
+  - [Módulo de Operaciones](docs/parcial-primer-corte/diagramas/clases-dao/clases-dao-operaciones.puml) ([PNG](docs/parcial-primer-corte/diagramas/clases-dao/clases_dao_operaciones.png))
+  - [Módulo Personal, Nómina y TIC](docs/parcial-primer-corte/diagramas/clases-dao/clases-dao-personal.puml) ([PNG](docs/parcial-primer-corte/diagramas/clases-dao/clases_dao_personal.png))
 - Diagramas de estados:
   - [Tiquete](docs/parcial-primer-corte/diagramas/estados/estado-tiquete.puml) ([PNG](docs/parcial-primer-corte/diagramas/estados/estado_tiquete.png))
   - [Guía de envío](docs/parcial-primer-corte/diagramas/estados/estado-guia-envio.puml) ([PNG](docs/parcial-primer-corte/diagramas/estados/estado_guia_envio.png))
