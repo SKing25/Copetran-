@@ -9,7 +9,6 @@
   1. **Integrante 1:** Santiago José Rodríguez Gutiérrez (~4 min 15 s — **cámara encendida**)
   2. **Integrante 2:** Nicolás Pérez Chuscano (~4 min 30 s — **cámara encendida**)
   3. **Integrante 3:** Camilo Andrés Díaz García (~4 min 15 s — **cámara encendida**)
-  4. **Cierre grupal:** Los tres integrantes juntos en cámara (~0 min 45 s)
 - **Duración total estimada:** 13 minutos 45 segundos
 - **Enfoque de grabación:** Explicación técnica formal proyectando el **Documento Word en pantalla**, el **código fuente en VS Code** y la **ejecución verificable por consola y pruebas automatizadas** (sin narrar interacciones de interfaz web de usuario).
 
@@ -32,7 +31,7 @@
 
 ## Preparación Técnica Antes de Grabar
 
-1. **Cámaras web:** Configurar la cuadrícula o recuadro lateral en la plataforma de grabación (OBS / Zoom / Teams) de modo que los tres integrantes estén visibles con **cámara encendida** durante toda la presentación.
+1. **Cámaras web:** Configurar la cuadrícula o recuadro lateral en la plataforma de grabación (OBS / Zoom / Teams)
 2. **Documento Word:** Tener abierto `CR3_Patrones_Comportamiento_Copetran_APA7.docx` a pantalla completa en la **Página 1**, listo para desplazarse hacia las secciones indicadas en cada bloque.
 3. **VS Code:** Tener abierto el proyecto en la raíz mostrando la separación de carpetas (`patrones-creacionales/`, `patrones-comportamiento/` y `frontend/`) y los archivos clave:
    - `patrones-comportamiento/mensajeria/model/patterns/chain_of_responsibility.py`
@@ -193,20 +192,6 @@
 > - Una vez levantada la novedad, reanudamos hacia `BODEGA_DESTINO` y finalmente confirmamos `ENTREGADO` registrando cédula y firma. Si intentamos reportar una novedad sobre la guía ya cerrada, `EstadoEntregado` la rechaza por ser un estado terminal inmutable.
 >
 > Además, como vemos ahora al ejecutar `unittest`, contamos con una suite completa de trece pruebas automatizadas que verifican la semántica estricta de códigos HTTP: doscientos para trámites exitosos, cuatrocientos para entradas corruptas, cuatrocientos cuatro para guías inexistentes en el DAO, cuatrocientos nueve para bloqueos del patrón State y cuatrocientos veintidós para rechazos en Chain of Responsibility, junto con los tests del módulo creacional."
-
----
-
-### Bloque 8. Conclusiones Finales y Cierre del Equipo (13:00 – 13:45)
-- **Expositores:** Santiago Rodríguez, Nicolás Pérez y Camilo Díaz *(los tres integrantes en pantalla con **cámara encendida**)*
-- **En pantalla:** Documento Word — **Páginas 30 y 31** (Conclusiones de ingeniería, enlace de YouTube y Referencias en formato APA 7).
-
-**Texto para decir:**
-- **Santiago Rodríguez *(cámara encendida)*:**
-  > "Para concluir nuestra sustentación, como sintetizamos en la página treinta del documento, la aplicación de patrones de comportamiento sobre el sistema de mensajería de Copetran S.A. demostró que es posible resolver flujos transaccionales complejos manteniendo una arquitectura desacoplada, escalable y mantenible."
-- **Nicolás Pérez *(cámara encendida)*:**
-  > "Chain of Responsibility nos proporcionó una tubería extensible donde añadir nuevas reglas de cubicaje o normativas aduaneras solo requiere agregar un nuevo manejador sin modificar los existentes; mientras que State blindó las transiciones operativas eliminando condicionales frágiles, respaldado por el diseño riguroso de Iterator y Memento."
-- **Camilo Díaz *(cámara encendida)*:**
-  > "Y la arquitectura de tres capas y MVC unificó en una sola aplicación ejecutable los patrones creacionales y de comportamiento con persistencia desacoplada y verificación automatizada. En la página uno y veintiséis del documento dejamos consignado el enlace final de YouTube. Muchas gracias por su atención."
 
 ---
 
