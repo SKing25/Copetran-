@@ -64,6 +64,9 @@ interface VenderTiqueteParams {
    * mayor). Por defecto 0, no afecta las llamadas existentes.
    */
   descuentoPorcentaje?: number;
+  /** Consecutivo y CUFE emitidos por el módulo Python de patrones creacionales cuando está en línea. */
+  numeroTiquete?: string;
+  cufe?: string | null;
 }
 
 export interface SillaConEstado extends Silla {
@@ -79,6 +82,10 @@ interface AdmitirGuiaParams {
   idMetodoPago: MetodoPago;
   /** ECU-02 flujo alterno A1: paga en el momento de la admisión. */
   pagaInmediato: boolean;
+  /** Valores autoritativos calculados por Chain of Responsibility + Singleton + Abstract Factory en Python. */
+  codigoBarras?: string;
+  valorTotal?: number;
+  cufe?: string | null;
 }
 
 interface DataContextValue {
@@ -173,7 +180,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         id_metodo_pago: idMetodoPago,
         fecha_emision: new Date().toISOString(),
         monto_total: tipoTiquete === 'RESERVADO' ? 0 : valorConDescuento,
-        cufe: tipoTiquete === 'RESERVADO' ? undefined : `CUFE-DEMO-${String(idFactura).padStart(4, '0')}`,
+        cufe:
+          tipoTiquete === 'RESERVADO'
+            ? undefined
+            : params.cufe !== undefined
+              ? params.cufe ?? undefined
+              : `CUFE-DEMO-${String(idFactura).padStart(4, '0')}`,
       };
 
       // RF03: bloqueo temporal de silla (demo: 3 minutos, como sugiere el brief).
@@ -184,7 +196,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const idTiquete = Math.max(0, ...tiquetes.map((t) => t.id_tiquete)) + 1;
       const nuevoTiquete: Tiquete = {
         id_tiquete: idTiquete,
-        numero_tiquete: `TQ-${String(idTiquete).padStart(6, '0')}`,
+        numero_tiquete: params.numeroTiquete ?? `TQ-${String(idTiquete).padStart(6, '0')}`,
         id_viaje: idViaje,
         id_silla: idSilla,
         id_pasajero: idPasajero,
@@ -225,7 +237,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const admitirGuia = useCallback(
     (params: AdmitirGuiaParams): GuiaEnvio => {
       const { idRemitente, idDestinatario, categoria, pesoKg, idCajero, idMetodoPago, pagaInmediato } = params;
-      const valorTotal = Math.round(pesoKg * TARIFA_POR_KG[categoria]);
+      const valorTotal =
+        typeof params.valorTotal === 'number' ? Math.round(params.valorTotal) : Math.round(pesoKg * TARIFA_POR_KG[categoria]);
 
       let idFactura: number | undefined;
       if (pagaInmediato) {
@@ -237,7 +250,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           id_metodo_pago: idMetodoPago,
           fecha_emision: new Date().toISOString(),
           monto_total: valorTotal,
-          cufe: `CUFE-DEMO-${String(idFactura).padStart(4, '0')}`,
+          cufe: params.cufe !== undefined ? params.cufe ?? undefined : `CUFE-DEMO-${String(idFactura).padStart(4, '0')}`,
         };
         setFacturas((prev) => [...prev, factura]);
       }
@@ -245,7 +258,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const idGuia = Math.max(0, ...guias.map((g) => g.id_guia)) + 1;
       const nuevaGuia: GuiaEnvio = {
         id_guia: idGuia,
-        codigo_barras: `GU-${String(idGuia).padStart(8, '0')}`,
+        codigo_barras: params.codigoBarras ?? `GU-${String(idGuia).padStart(8, '0')}`,
         id_remitente: idRemitente,
         id_destinatario: idDestinatario,
         id_factura: idFactura,

@@ -1,10 +1,17 @@
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { useData } from '@/context/DataContext';
 import type { CategoriaMercancia, EstadoGuia, GuiaEnvio, MetodoPago } from '@/types/copetran';
 import { Alert, AlertDialog, Badge, Button, Card, CardTitle, Input, Modal, Select } from '@/components/ui';
 import { formatCurrency, formatDate } from '@/utils/format';
-import { Printer, Barcode, Calculator, ShieldAlert } from 'lucide-react';
+import {
+  ejecutarTransicionStatePython,
+  ServidorBackendOfflineError,
+  validarAdmisionChainPython,
+} from '@/services/patronesApi';
+import type { RespuestaAdmisionChain } from '@/services/patronesApi';
+import { Printer, Barcode, Calculator, ShieldAlert, Terminal } from 'lucide-react';
 
 const ID_OPERARIO_DEMO = 200;
 
@@ -44,6 +51,7 @@ interface CambioEstadoPendiente {
  * volumétrico.
  */
 export function MensajeriaModule() {
+  const { usuario } = useAuth();
   const { clientes, guias, remesas, admitirGuia, consolidarEnRemesa, cambiarEstadoGuia, registrarCliente } = useData();
 
   const [idRemitente, setIdRemitente] = useState<number | ''>('');
@@ -55,6 +63,14 @@ export function MensajeriaModule() {
   const [altoCm, setAltoCm] = useState('');
   const [pagaInmediato, setPagaInmediato] = useState(false);
   const [metodoPago, setMetodoPago] = useState<MetodoPago>('EFECTIVO');
+  const [ciudadOrigen, setCiudadOrigen] = useState('Bogotá');
+  const [ciudadDestino, setCiudadDestino] = useState('Bucaramanga');
+  const [valorDeclarado, setValorDeclarado] = useState('500000');
+  const [tienePolizaExtra, setTienePolizaExtra] = useState(false);
+  const [errorValidacionPython, setErrorValidacionPython] = useState<string | null>(null);
+  const [trazaPython, setTrazaPython] = useState<string[]>([
+    'Listo: al generar una guía o cambiar su estado, se ejecutará Chain of Responsibility o State en el backend Python (patrones-comportamiento).',
+  ]);
   const [mostrarRegistro, setMostrarRegistro] = useState<'remitente' | 'destinatario' | null>(null);
   const [ultimoIdGuia, setUltimoIdGuia] = useState<number | null>(null);
   const [guiaRotulo, setGuiaRotulo] = useState<GuiaEnvio | null>(null);
@@ -69,26 +85,72 @@ export function MensajeriaModule() {
   const haySobrepeso = hayCubicaje && pesoVolumetrico > pesoReal;
   const pesoFacturable = hayCubicaje ? Math.max(pesoReal, pesoVolumetrico) : pesoReal;
 
-  // Calculadora Dinámica de Flete
+  // Calculadora Dinámica de Flete (sincronizada 1:1 con LiquidadorTarifaYPolizaHandler en Python)
   const tarifaBase = Math.round(pesoFacturable * 3500);
   const porcentajeRecargo = categoria === 'PERECEDERA' ? 0.15 : categoria === 'FRAGIL' ? 0.2 : categoria === 'VALORES' ? 0.25 : 0;
   const valorRecargo = Math.round(tarifaBase * porcentajeRecargo);
-  const totalEstimado = tarifaBase + valorRecargo;
+  const primaPoliza = tienePolizaExtra ? Math.round((Number(valorDeclarado) || 0) * 0.015) : 0;
+  const totalEstimado = tarifaBase + valorRecargo + primaPoliza;
 
   async function handleAdmitir(e: FormEvent) {
     e.preventDefault();
     if (!idRemitente || !idDestinatario || !pesoKg) return;
     setAdmitiendo(true);
+    setErrorValidacionPython(null);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      const remObj = clientes.find((c) => c.id_cliente === idRemitente);
+      const destObj = clientes.find((c) => c.id_cliente === idDestinatario);
+      const canalVenta = usuario?.rol === 'CLIENTE' ? 'WEB' : 'TAQUILLA';
+      let resPython: RespuestaAdmisionChain | null = null;
+      try {
+        resPython = await validarAdmisionChainPython({
+          remitente: remObj ? `${remObj.nombres} ${remObj.apellidos}` : String(idRemitente),
+          destinatario: destObj ? `${destObj.nombres} ${destObj.apellidos}` : String(idDestinatario),
+          ciudad_origen: ciudadOrigen,
+          ciudad_destino: ciudadDestino,
+          categoria,
+          peso_real_kg: pesoReal,
+          largo_cm: Number(largoCm) || 0,
+          ancho_cm: Number(anchoCm) || 0,
+          alto_cm: Number(altoCm) || 0,
+          valor_declarado: Number(valorDeclarado) || 500000,
+          tiene_poliza_extra: tienePolizaExtra,
+          paga_inmediato: pagaInmediato,
+          canal_venta: canalVenta,
+        });
+        const resumenFactura = resPython.numero_factura ? ` | Factura ${resPython.numero_factura}` : '';
+        setTrazaPython([
+          '=== EJECUCIÓN CHAIN OF RESPONSIBILITY (Python: patrones-comportamiento) ===',
+          ...resPython.trazabilidad,
+          resPython.aprobado
+            ? `[RESULTADO] Guía ${resPython.codigo_barras} creada en estado inicial ${resPython.estado_actual}${resumenFactura}.`
+            : resPython.error_validacion_entrada
+              ? '[RECHAZADO HTTP 400 — Validación Estructural de Datos]'
+              : `[DETENIDO EN ESLABÓN: ${resPython.eslabon_rechazo}]`,
+        ]);
+        if (!resPython.aprobado) {
+          setErrorValidacionPython(resPython.motivo_rechazo ?? 'Solicitud rechazada por la cadena de validación.');
+          return;
+        }
+      } catch (err) {
+        if (!(err instanceof ServidorBackendOfflineError)) {
+          setErrorValidacionPython(err instanceof Error ? err.message : 'Error inesperado al validar la guía.');
+          return;
+        }
+        setTrazaPython(['[Aviso] Servidor Python offline (ejecute python3 servidor_api.py). Usando validación local.']);
+      }
+
       const guia = admitirGuia({
         idRemitente,
         idDestinatario,
         categoria,
-        pesoKg: Math.round(pesoFacturable * 100) / 100,
+        pesoKg: resPython?.peso_facturable_kg ?? Math.round(pesoFacturable * 100) / 100,
         idCajero: ID_OPERARIO_DEMO,
         idMetodoPago: metodoPago,
         pagaInmediato,
+        codigoBarras: resPython?.codigo_barras,
+        valorTotal: resPython?.costo_flete ?? totalEstimado,
+        cufe: resPython?.cufe_dian,
       });
       setUltimoIdGuia(guia.id_guia);
       setGuiaRotulo(guia);
@@ -101,6 +163,46 @@ export function MensajeriaModule() {
     }
   }
 
+  async function gestionarTransicionState(guia: GuiaEnvio, estadoSolicitado: EstadoGuia) {
+    setErrorValidacionPython(null);
+    const remObj = clientes.find((c) => c.id_cliente === guia.id_remitente);
+    const destObj = clientes.find((c) => c.id_cliente === guia.id_destinatario);
+    const esGuiaSemillaLocal = guia.codigo_barras.length > 9;
+    try {
+      const resState = await ejecutarTransicionStatePython({
+        codigo_barras: guia.codigo_barras,
+        estado_actual_ui: guia.id_estado_guia,
+        nuevo_estado: estadoSolicitado,
+        sincronizar_semilla: esGuiaSemillaLocal,
+        remitente: remObj ? `${remObj.nombres} ${remObj.apellidos}` : 'Remitente',
+        destinatario: destObj ? `${destObj.nombres} ${destObj.apellidos}` : 'Destinatario',
+        categoria: guia.id_categoria_mercancia,
+        peso_kg: guia.peso_kg,
+        valor_total: guia.valor_total,
+      });
+      if (!resState.exitoso) {
+        const prefijo = resState.bloqueado_por_state ? '[Patrón State — HTTP 409]' : '[Validación API]';
+        setErrorValidacionPython(`${prefijo} ${resState.mensaje}`);
+        setTrazaPython([
+          `=== BLOQUEO PATRÓN STATE (${guia.codigo_barras}) ===`,
+          `[RECHAZADO] ${resState.mensaje} (Permanece en ${guia.id_estado_guia})`,
+        ]);
+        return;
+      }
+      cambiarEstadoGuia(guia.id_guia, estadoSolicitado);
+      setTrazaPython([
+        `=== TRANSICIÓN PATRÓN STATE (${guia.codigo_barras}: ${resState.estado_anterior} -> ${resState.estado_actual}) ===`,
+        ...(resState.bitacora_state ?? [resState.mensaje]),
+      ]);
+    } catch (err) {
+      if (err instanceof ServidorBackendOfflineError) {
+        cambiarEstadoGuia(guia.id_guia, estadoSolicitado);
+        return;
+      }
+      setErrorValidacionPython(err instanceof Error ? err.message : 'Error de comunicación al cambiar estado.');
+    }
+  }
+
   function remesasCompatibles(idGuiaBuscada: number) {
     const guia = guias.find((g) => g.id_guia === idGuiaBuscada);
     if (!guia) return [];
@@ -110,9 +212,15 @@ export function MensajeriaModule() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Módulo de Mensajería (ECU-02)</h1>
-        <p className="text-sm text-slate-500">Admisión de guías de envío con cubicaje y cálculo de peso facturable.</p>
+        <h1 className="text-xl font-bold text-slate-900">Módulo de Mensajería (ECU-02 — Chain of Responsibility & State)</h1>
+        <p className="text-sm text-slate-500">Conectado al backend Python separado en <code>patrones-comportamiento/</code>.</p>
       </div>
+
+      {errorValidacionPython && (
+        <Alert variant="danger" title="Validación de Patrones de Comportamiento (Python)">
+          {errorValidacionPython}
+        </Alert>
+      )}
 
       <Card>
         <CardTitle>1. Admisión: remitente, destinatario, pesaje y cubicaje</CardTitle>
@@ -141,7 +249,26 @@ export function MensajeriaModule() {
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Select label="Categoría de mercancía" value={categoria} onChange={(e) => setCategoria(e.target.value as CategoriaMercancia)}>
+            <Select label="Ciudad origen (Eslabón 1: Cobertura)" value={ciudadOrigen} onChange={(e) => setCiudadOrigen(e.target.value)}>
+              <option value="Bogotá">Bogotá</option>
+              <option value="Bucaramanga">Bucaramanga</option>
+              <option value="Medellín">Medellín</option>
+              <option value="Cali">Cali</option>
+              <option value="Barranquilla">Barranquilla</option>
+              <option value="Leticia">Leticia (Sin cobertura — Prueba rechazo Eslabón 1)</option>
+            </Select>
+            <Select label="Ciudad destino (Eslabón 1: Cobertura)" value={ciudadDestino} onChange={(e) => setCiudadDestino(e.target.value)}>
+              <option value="Bucaramanga">Bucaramanga</option>
+              <option value="Bogotá">Bogotá</option>
+              <option value="Medellín">Medellín</option>
+              <option value="Cali">Cali</option>
+              <option value="Cúcuta">Cúcuta</option>
+              <option value="Leticia">Leticia (Sin cobertura — Prueba rechazo Eslabón 1)</option>
+            </Select>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Select label="Categoría de mercancía (Eslabón 2: Topes kg)" value={categoria} onChange={(e) => setCategoria(e.target.value as CategoriaMercancia)}>
               {CATEGORIAS.map((c) => (
                 <option key={c.valor} value={c.valor}>
                   {c.etiqueta}
@@ -158,6 +285,22 @@ export function MensajeriaModule() {
               suffix="kg"
               required
             />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 items-end">
+            <Input
+              label="Valor declarado mercancía (Eslabón 3: Seguro)"
+              type="number"
+              min="0"
+              step="any"
+              value={valorDeclarado}
+              onChange={(e) => setValorDeclarado(e.target.value)}
+              suffix="COP"
+            />
+            <label className="flex items-center gap-2 text-xs font-medium text-slate-700 pb-2">
+              <input type="checkbox" checked={tienePolizaExtra} onChange={(e) => setTienePolizaExtra(e.target.checked)} />
+              Activar póliza aseguradora adicional (obligatoria si supera $2.000.000)
+            </label>
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
@@ -218,8 +361,10 @@ export function MensajeriaModule() {
                   </strong>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Modalidad:</span>
-                  <strong className="text-slate-800">{pagaInmediato ? 'Pago Inmediato' : 'Cobro en Destino'}</strong>
+                  <span className="text-slate-500 block">Póliza / Modalidad:</span>
+                  <strong className="text-slate-800">
+                    {primaPoliza > 0 ? `+${formatCurrency(primaPoliza)} (1,5%)` : pagaInmediato ? 'Pago Inmediato' : 'Cobro en Destino'}
+                  </strong>
                 </div>
                 <div>
                   <span className="text-slate-500 block">Total Liquidado:</span>
@@ -321,6 +466,22 @@ export function MensajeriaModule() {
                             → {estado}
                           </Button>
                         ))}
+                        {g.id_estado_guia !== 'BODEGA_DESTINO' && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() =>
+                              void gestionarTransicionState(
+                                g,
+                                g.id_estado_guia === 'ENTREGADO' ? 'NOVEDAD' : 'ENTREGADO',
+                              )
+                            }
+                            className="!text-rose-700 !border-rose-200 hover:!bg-rose-50 text-xs"
+                            title="Envía una transición ilegal al backend Python para demostrar el bloqueo del Patrón State"
+                          >
+                            Probar bloqueo State
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -329,6 +490,16 @@ export function MensajeriaModule() {
             </tbody>
           </table>
         </div>
+      </Card>
+
+      <Card className="bg-slate-950 text-slate-100 border-slate-800">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400 mb-2">
+          <Terminal className="h-4 w-4" />
+          Bitácora en Vivo — Backend Python (Chain of Responsibility & Patrón State)
+        </div>
+        <pre className="text-xs font-mono whitespace-pre-wrap text-emerald-300 leading-relaxed">
+          {trazaPython.join('\n')}
+        </pre>
       </Card>
 
       <Card>
@@ -353,7 +524,12 @@ export function MensajeriaModule() {
         open={cambioPendiente !== null}
         onClose={() => setCambioPendiente(null)}
         onConfirm={() => {
-          if (cambioPendiente) cambiarEstadoGuia(cambioPendiente.idGuia, cambioPendiente.nuevoEstado);
+          if (cambioPendiente) {
+            const guiaObj = guias.find((item) => item.id_guia === cambioPendiente.idGuia);
+            if (guiaObj) {
+              void gestionarTransicionState(guiaObj, cambioPendiente.nuevoEstado);
+            }
+          }
           setCambioPendiente(null);
         }}
         title="Cambiar estado de la guía"

@@ -10,6 +10,7 @@ import { AlertDialog, Badge, Button, Card, CardTitle, Input, Modal, Select } fro
 import { SeatMap } from './SeatMap';
 import { cn } from '@/utils/cn';
 import { formatCurrency, formatDate } from '@/utils/format';
+import { registrarVentaCreacionalPython } from '@/services/patronesApi';
 import { Printer, QrCode, Ticket as TicketIcon, CheckCircle2 } from 'lucide-react';
 
 /**
@@ -82,6 +83,16 @@ export function TiquetesModule() {
     setComprando(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 400));
+      const pasajeroObj = clientes.find((c) => c.id_cliente === idPasajero);
+      const sillaObj = sillas.find((s) => s.id_silla === idSilla);
+      const resPython = await registrarVentaCreacionalPython({
+        numero_silla: sillaObj?.numero ?? 1,
+        nombre_pasajero: pasajeroObj ? `${pasajeroObj.nombres} ${pasajeroObj.apellidos}` : 'Pasajero',
+        documento: pasajeroObj?.documento ?? '1098000000',
+        codigo_descuento: codigoDescuento.trim(),
+        canal,
+        metodo_pago: metodoPago,
+      }).catch(() => undefined);
       const tiquete = venderTiquete({
         idViaje,
         idSilla,
@@ -91,6 +102,8 @@ export function TiquetesModule() {
         idMetodoPago: metodoPago,
         tipoTiquete,
         descuentoPorcentaje,
+        numeroTiquete: resPython?.exitoso ? resPython.numero_tiquete_singleton : undefined,
+        cufe: resPython?.exitoso ? resPython.cufe_dian : undefined,
       });
       setUltimoTiquete(tiquete);
       setTiqueteBoleto(tiquete);
